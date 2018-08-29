@@ -85,9 +85,8 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
     * [LCD驱动程序之编写代码之2硬件设置](docs/Linux驱动/LCD驱动程序之编写代码之2硬件设置.md)
     * [LCD驱动程序之编写代码之3显存和调色板设置](docs/Linux驱动/LCD驱动程序之编写代码之3显存和调色板设置.md)
 
-
-
 ## 思维导图
+
 
 
 ## 参考教程
@@ -108,8 +107,6 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
 ● 课程内容涵盖: Linux内核常用机制(总线-设备-驱动，输入子系统, 中断，休眠唤醒，异步通知，阻塞和非阻塞I/O等)，常用部件驱动(LED、按键、触摸屏、LCD、USB、Nand Flash、Nor Flash、网卡、I2C[总线驱动和设备驱动]和声卡等)。
 
 ● 独家调试秘笈倾情奉献：裸机调试、驱动调试和应用调试。
-
-
 
 ```
 本仓库仅个人学习笔记，内容基本为视频教程所讲。经咨询客服可以截图做笔记网上发表，如有涉及侵权问题请早告知。
