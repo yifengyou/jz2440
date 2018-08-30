@@ -42,6 +42,9 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
     * [win7下不能使用dnw烧写的替代方法](docs/基础入门/win7下不能使用dnw烧写的替代方法.md)
     * [环境搭建及工具+概念介绍](docs/基础入门/环境搭建及工具+概念介绍.md)
 * [ARM体系结构](docs/ARM体系结构/ARM体系结构.md)
+    * [开发板熟悉与体验](docs/ARM体系结构/开发板熟悉与体验.md)
+    * [裸机开发步骤和工具使用](docs/ARM体系结构/裸机开发步骤和工具使用.md)
+    * [第1个ARM裸板程序及引申](docs/ARM体系结构/第1个ARM裸板程序及引申.md)
     * [GPIO实验](docs/ARM体系结构/GPIO实验.md)
     * [存储管理器实验](docs/ARM体系结构/存储管理器实验.md)
     * [MMU实验](docs/ARM体系结构/MMU实验.md)
@@ -111,6 +114,11 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
 ```
 本仓库仅个人学习笔记，内容基本为视频教程所讲。经咨询客服可以截图做笔记网上发表，如有涉及侵权问题请早告知。
 ```
+
+## 大佬建议学习路线
+
+![1535615108609.png](image/1535615108609.png)
+
 
 ## 参考书籍
 
