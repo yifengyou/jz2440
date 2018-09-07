@@ -52,20 +52,21 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
     * [中断控制器](docs/ARM体系结构/中断控制器.md)
     * [系统时钟和UART实验](docs/ARM体系结构/系统时钟和UART实验.md)
     * [LCD实验](docs/ARM体系结构/LCD实验.md)
-    * [u-boot分析之编译体验](docs/ARM体系结构/u-boot分析之编译体验.md)
-    * [u-boot分析之Makefile结构分析](docs/ARM体系结构/u-boot分析之Makefile结构分析.md)
-    * [u-boot分析之源码第1阶段](docs/ARM体系结构/u-boot分析之源码第1阶段.md)
-    * [u-boot分析之源码第2阶段](docs/ARM体系结构/u-boot分析之源码第2阶段.md)
-    * [u-boot分析之u-boot命令实现](docs/ARM体系结构/u-boot分析之u-boot命令实现.md)
-    * [u-boot分析_uboot启动内核](docs/ARM体系结构/u-boot分析_uboot启动内核.md)
-    * [内核启动流程分析之编译体验](docs/ARM体系结构/内核启动流程分析之编译体验.md)
-    * [内核启动流程分析之配置](docs/ARM体系结构/内核启动流程分析之配置.md)
-    * [内核启动流程分析之Makefile](docs/ARM体系结构/内核启动流程分析之Makefile.md)
-    * [内核启动流程分析之内核启动](docs/ARM体系结构/内核启动流程分析之内核启动.md)
-    * [构建根文件系统之启动第1个程序](docs/ARM体系结构/构建根文件系统之启动第1个程序.md)
-    * [构建根文件系统之init进程分析](docs/ARM体系结构/构建根文件系统之init进程分析.md)
-    * [构建根文件系统之busybox](docs/ARM体系结构/构建根文件系统之busybox.md)
-    * [构建根文件系统之构建根文件系统](docs/ARM体系结构/构建根文件系统之构建根文件系统.md)
+* [u-boot及内核启动](docs/u-boot及内核启动/u-boot及内核启动.md)
+    * [u-boot分析之编译体验](docs/u-boot及内核启动/u-boot分析之编译体验.md)
+    * [u-boot分析之Makefile结构分析](docs/u-boot及内核启动/u-boot分析之Makefile结构分析.md)
+    * [u-boot分析之源码第1阶段](docs/u-boot及内核启动/u-boot分析之源码第1阶段.md)
+    * [u-boot分析之源码第2阶段](docs/u-boot及内核启动/u-boot分析之源码第2阶段.md)
+    * [u-boot分析之u-boot命令实现](docs/u-boot及内核启动/u-boot分析之u-boot命令实现.md)
+    * [u-boot分析_uboot启动内核](docs/u-boot及内核启动/u-boot分析_uboot启动内核.md)
+    * [内核启动流程分析之编译体验](docs/u-boot及内核启动/内核启动流程分析之编译体验.md)
+    * [内核启动流程分析之配置](docs/u-boot及内核启动/内核启动流程分析之配置.md)
+    * [内核启动流程分析之Makefile](docs/u-boot及内核启动/内核启动流程分析之Makefile.md)
+    * [内核启动流程分析之内核启动](docs/u-boot及内核启动/内核启动流程分析之内核启动.md)
+    * [构建根文件系统之启动第1个程序](docs/u-boot及内核启动/构建根文件系统之启动第1个程序.md)
+    * [构建根文件系统之init进程分析](docs/u-boot及内核启动/构建根文件系统之init进程分析.md)
+    * [构建根文件系统之busybox](docs/u-boot及内核启动/构建根文件系统之busybox.md)
+    * [构建根文件系统之构建根文件系统](docs/u-boot及内核启动/构建根文件系统之构建根文件系统.md)
 * [Linux驱动](docs/Linux驱动/Linux驱动.md)
     * [字符设备驱动程序之概念介绍](docs/Linux驱动/字符设备驱动程序之概念介绍.md)
     * [字符设备驱动程序之LED驱动程序编写编译](docs/Linux驱动/字符设备驱动程序之LED驱动程序_编写编译.md)
@@ -138,9 +139,17 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
 
 不仅有详细的理论基础知识介绍，还有大量的开发案例以供参考，可读性和实用性强，可供从事嵌入式系统设计和开发的广大科技人员阅读，也可作为大专院校电子控制专业及其他相关专业的教材或参考资料。
 
+
 ![1535373878098.png](image/1535373878098.png)
 
  《漫画电子电路》 是2010年科学出版社出版的图书，作者是（日）田中贤一等。 该书是以漫画的形式讲解电子电路基础的入门图书，用漫画和插图一步一步地对电子电路进行说明。
+
+![1536288818089.png](image/1536288818089.png)
+
+
+该书是多位作者在3年Liunx内核分析经验和庞大资料基础上写成的，收录了其他同类书未曾讲解的内容并进行逐行分析，一扫当前市场中其他理论书带给读者的郁闷。书中详细的代码分析与大量插图能够使读者对Linux内核及ARM获得正确认识，自然而然习得如何有效分析定期发布的Linux内核。
+
+适合想从Linux内核启动开始透彻分析全部启动过程的读者，因Linux代码量庞大而束手无策的人、想要了解Linux实际运行过程的人、渴求OS实操理论的人，本书必将成为他们不可或缺的参考书。
 
 ## 总结
 
