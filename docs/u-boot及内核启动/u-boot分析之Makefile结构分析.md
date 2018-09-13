@@ -1,17 +1,25 @@
 <!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [u-boot分析之Makefile结构分析](#u-boot分析之makefile结构分析)
-	- [u-boot源码提供的剧透文件-README](#u-boot源码提供的剧透文件-readme)
-		- [u-boot命名和拼写](#u-boot命名和拼写)
-		- [u-boot版本号](#u-boot版本号)
-		- [u-boot目录树](#u-boot目录树)
-		- [u-boot配置](#u-boot配置)
-		- [编译环境构建](#编译环境构建)
-	- [阅读Makefile的重要性](#阅读makefile的重要性)
-	- [分析配置过程](#分析配置过程)
-	- [参考资料](#参考资料)
+  - [u-boot源码提供的剧透文件-README](#u-boot源码提供的剧透文件-readme)
+    - [u-boot命名和拼写](#u-boot命名和拼写)
+    - [u-boot版本号](#u-boot版本号)
+    - [u-boot目录树](#u-boot目录树)
+    - [u-boot配置](#u-boot配置)
+    - [u-boot编译环境构建](#u-boot编译环境构建)
+    - [u-boot修改默认输出目录](#u-boot修改默认输出目录)
+    - [u-boot适配新开发板](#u-boot适配新开发板)
+    - [u-boot自带自带命令](#u-boot自带自带命令)
+  - [阅读Makefile的重要性](#阅读makefile的重要性)
+  - [分析配置过程](#分析配置过程)
+  - [参考资料](#参考资料)
 
 <!-- /TOC -->
+
+[TOC]
+
+
+
 # u-boot分析之Makefile结构分析
 
 ## u-boot源码提供的剧透文件-README
@@ -166,7 +174,7 @@ Configuration Settings:
 * 配置以“CFG_”开头
 * 有相当多的配置
 
-### 编译环境构建
+### u-boot编译环境构建
 
 ```
 Building the Software:
@@ -242,6 +250,128 @@ export PATH=/root/jz2440/gcc-3.4.5-glibc-2.3.6/bin:$PATH
 arm-linux-objcopy --gap-fill=0xff -O srec /tmp/build/u-boot /tmp/build/u-boot.srec
 arm-linux-objcopy --gap-fill=0xff -O binary /tmp/build/u-boot /tmp/build/u-boot.bin
 ```
+
+
+
+### u-boot修改默认输出目录
+
+
+```
+By default the build is performed locally and the objects are saved in the source directory. One of the two methods can be used to change this behavior and build U-Boot to some external directory:
+
+  1. Add O= to the make command line invocations:
+     make O=/tmp/build distclean
+     make O=/tmp/build NAME_config
+     make O=/tmp/build all
+  2. Set environment variable BUILD_DIR to point to the desired location:
+     export BUILD_DIR=/tmp/build
+     make distclean
+     make NAME_config
+     make all
+Note that the command line "O=" setting overrides the BUILD_DIR environment variable.
+```
+
+* make 指定参数 **O=** 指定输出路径 或者 编译之前设定输出目录环境变量 **export BUILD_DIR=**
+
+* make指定输出路径优先,环境变量其次。局部优先原则
+
+
+### u-boot适配新开发板
+
+```
+If the system board that you have is not listed, then you will need to port U-Boot to your hardware platform. To do this, follow these steps:
+
+1. Add a new configuration option for your board to the toplevel "Makefile" and to the "MAKEALL" script, using the existing entries as examples. Note that here and at many other places boards and other names are listed in alphabetical sort order. Please keep this order.
+2. Create a new directory to hold your board specific code. Add any files you need. In your board directory, you will need at least the "Makefile", a "<board>.c", "flash.c" and "u-boot.lds".
+3. Create a new configuration file "include/configs/<board>.h" for your board
+4. If you're porting U-Boot to a new CPU, then also create a new directory to hold your CPU specific code. Add any files you need.
+5. Run "make <board>_config" with your new name.
+6. Type "make", and you should get a working "u-boot.srec" file to be installed on your target system.
+7. Debug and solve any problems that might arise. [Of course, this last step is much harder than it sounds.]
+
+
+```
+
+
+
+* 如果开发板官方没有适配，那么需要以下几个步骤
+  1. 在Makefile（顶层目录）中添加新的目标，在MAKEALL脚本中添加内容。参照已经存在的条目填写。尽量按照字母排序填写。Makefile中添加<board>_config目标，具体写法参照其他条目。
+  2. 为新开发板创建一个特定目录存放源代码。至少包含一个Makefile，一个 "Makefile",  "<board>.c", "flash.c" 和 "u-boot.lds"。其中，board为开发板名称，lds为链接器脚本。
+  3. 为新开发板创建一个新的配置文件"include/configs/<board>.h" 其中，board为开发板名称
+  4. 如果新开发板采用的是新的CPU，那么还需要创建新CPU对应的文件夹存放相关代码。
+  5. 运行"make <board>_config"，配置编译环境。其中，board为开发板名称，上述创建的内容
+  6. 生成的最终目标文件包含三个，上面说过了，其中u-boot.srec是摩托罗拉处理器的
+  7. 调试，迭代工程。听起来步骤简单，坐起来繁琐的一匹。
+
+
+![1536821458270](image/1536821458270.png)
+
+### u-boot自带自带命令
+
+```
+Monitor Commands - Overview:
+============================
+go	- start application at address 'addr'
+run	- run commands in an environment variable
+bootm	- boot application image from memory
+bootp	- boot image via network using BootP/TFTP protocol tftpboot- boot image via network using TFTP protocol and env variables "ipaddr" and "serverip"
+	       (and eventually "gatewayip")
+rarpboot- boot image via network using RARP/TFTP protocol diskboot- boot from IDE devicebootd   - boot default, i.e., run 'bootcmd'
+loads	- load S-Record file over serial line
+loadb	- load binary file over serial line (kermit mode)
+md	- memory display
+mm	- memory modify (auto-incrementing)
+nm	- memory modify (constant address)
+mw	- memory write (fill)
+cp	- memory copy
+cmp	- memory compare
+crc32	- checksum calculation
+imd	- i2c memory display
+imm	- i2c memory modify (auto-incrementing)
+inm	- i2c memory modify (constant address)
+imw	- i2c memory write (fill)
+icrc32	- i2c checksum calculation
+iprobe	- probe to discover valid I2C chip addresses
+iloop	- infinite loop on address range
+isdram	- print SDRAM configuration information
+sspi	- SPI utility commands
+base	- print or set address offset
+printenv- print environment variables
+setenv	- set environment variables
+saveenv - save environment variables to persistent storage
+protect - enable or disable FLASH write protection
+erase	- erase FLASH memory
+flinfo	- print FLASH memory information
+bdinfo	- print Board Info structure
+iminfo	- print header information for application image
+coninfo - print console devices and informations
+ide	- IDE sub-system
+loop	- infinite loop on address range
+loopw	- infinite write loop on address range
+mtest	- simple RAM test
+icache	- enable or disable instruction cache
+dcache	- enable or disable data cache
+reset	- Perform RESET of the CPU
+echo	- echo args to console
+version - print monitor version
+help	- print online help
+?	- alias for 'help'
+
+Monitor Commands - Detailed Description:
+========================================
+TODO.
+For now: just type "help <command>".
+```
+
+* 常用命令如上所述，看懂英文基本知道怎么用
+* 想知道某个命令的具体用法那就"help <command>"就行了
+
+
+
+暂时u-boot内容了解这些，其实还有很多内容，涉及到内核启动相关，环境变量设定等等，扩展功能繁多。
+
+
+
 
 ## 阅读Makefile的重要性
 
@@ -431,5 +561,5 @@ Makefile基本用法想看Github博客<http://github.com/yifengyou/learn-makefil
 ```
 视频里面讲的其实也不是很详细，只是点到为止，没有做梳理总结，你需要数量掌握Makefile的
 身为一个Linux程序员尤其是搞嵌入式的，如果Makefile不熟悉，呵呵
-知识点总结人可没功夫替你弄好，你需要自己来，把别人的东西彻底消化
+知识点总结人可没功夫替你弄好，你需要自己来，把别人的东西彻底消化，才是你的。
 ```
