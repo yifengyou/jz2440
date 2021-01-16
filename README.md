@@ -22,6 +22,7 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
 
 * [开发环境](docs/开发环境/开发环境.md)
     * [Ubuntu 18.04](docs/开发环境/Ubuntu-18.04.md)
+    * [Win 10 64位](docs/开发环境/Win10x64.md)
 * [基础入门](docs/基础入门/基础入门.md)
     * [怎么看原理图之GPIO和门电路](docs/基础入门/怎么看原理图之GPIO和门电路.md)
     * [怎么看原理图之协议类接口之UART](docs/基础入门/怎么看原理图之协议类接口之UART.md)
@@ -158,6 +159,14 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
 该书是多位作者在3年Liunx内核分析经验和庞大资料基础上写成的，收录了其他同类书未曾讲解的内容并进行逐行分析，一扫当前市场中其他理论书带给读者的郁闷。书中详细的代码分析与大量插图能够使读者对Linux内核及ARM获得正确认识，自然而然习得如何有效分析定期发布的Linux内核。
 
 适合想从Linux内核启动开始透彻分析全部启动过程的读者，因Linux代码量庞大而束手无策的人、想要了解Linux实际运行过程的人、渴求OS实操理论的人，本书必将成为他们不可或缺的参考书。
+
+## 随书光盘
+
+* <http://box.ptpress.com.cn/y/978-7-115-18262-3>
+
+![20210116_151533_82](image/20210116_151533_82.png)
+
+![20210116_151613_67](image/20210116_151613_67.png) 
 
 ## 总结
 
