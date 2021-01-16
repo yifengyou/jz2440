@@ -25,6 +25,7 @@
 #include <linux/interrupt.h>
 #include <linux/highmem.h>
 #include <linux/module.h>
+#include <linux/kgdb.h>
 
 #include <asm/page.h>
 #include <asm/pgtable.h>
@@ -328,6 +329,14 @@ bad_page_fault(struct pt_regs *regs, unsigned long address, int sig)
 		regs->nip = entry->fixup;
 		return;
 	}
+
+#ifdef CONFIG_KGDB
+	if (atomic_read(&debugger_active) && kgdb_may_fault) {
+		/* Restore our previous state. */
+		kgdb_fault_longjmp(kgdb_fault_jmp_regs);
+		/* Not reached. */
+	}
+#endif
 
 	/* kernel has accessed a bad area */
 #if defined(CONFIG_XMON) || defined(CONFIG_KGDB)

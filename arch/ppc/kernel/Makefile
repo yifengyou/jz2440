@@ -14,7 +14,7 @@ obj-y				:= entry.o traps.o time.o misc.o \
 obj-$(CONFIG_MODULES)		+= ppc_ksyms.o
 obj-$(CONFIG_PCI)		+= pci.o
 obj-$(CONFIG_RAPIDIO)		+= rio.o
-obj-$(CONFIG_KGDB)		+= ppc-stub.o
+obj-$(CONFIG_KGDB)		+= kgdb.o kgdb_setjmp32.o
 obj-$(CONFIG_SMP)		+= smp.o smp-tbsync.o
 obj-$(CONFIG_KEXEC)		+= machine_kexec.o relocate_kernel.o
 

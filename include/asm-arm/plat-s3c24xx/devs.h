@@ -42,6 +42,7 @@ extern struct platform_device s3c_device_timer2;
 extern struct platform_device s3c_device_timer3;
 
 extern struct platform_device s3c_device_usbgadget;
+extern struct platform_device s3c_device_ts;
 
 /* s3c2440 specific devices */
 

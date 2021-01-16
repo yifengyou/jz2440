@@ -15,6 +15,7 @@
 #include <linux/tty.h>
 #include <linux/serial_8250.h>
 #include <linux/slab.h>
+#include <linux/kgdb.h>
 
 #include <asm/types.h>
 #include <asm/setup.h>
@@ -76,7 +77,8 @@ static struct plat_serial8250_port ixdp425_uart_data[] = {
 		.mapbase	= IXP4XX_UART1_BASE_PHYS,
 		.membase	= (char *)IXP4XX_UART1_BASE_VIRT + REG_OFFSET,
 		.irq		= IRQ_IXP4XX_UART1,
-		.flags		= UPF_BOOT_AUTOCONF | UPF_SKIP_TEST,
+		.flags		= UPF_BOOT_AUTOCONF | UPF_SKIP_TEST |
+					UPF_SHARE_IRQ,
 		.iotype		= UPIO_MEM,
 		.regshift	= 2,
 		.uartclk	= IXP4XX_UART_XTAL,
@@ -85,7 +87,8 @@ static struct plat_serial8250_port ixdp425_uart_data[] = {
 		.mapbase	= IXP4XX_UART2_BASE_PHYS,
 		.membase	= (char *)IXP4XX_UART2_BASE_VIRT + REG_OFFSET,
 		.irq		= IRQ_IXP4XX_UART2,
-		.flags		= UPF_BOOT_AUTOCONF | UPF_SKIP_TEST,
+		.flags		= UPF_BOOT_AUTOCONF | UPF_SKIP_TEST |
+					UPF_SHARE_IRQ,
 		.iotype		= UPIO_MEM,
 		.regshift	= 2,
 		.uartclk	= IXP4XX_UART_XTAL,
@@ -123,12 +126,22 @@ static void __init ixdp425_init(void)
 	platform_add_devices(ixdp425_devices, ARRAY_SIZE(ixdp425_devices));
 }
 
+static void __init ixdp425_map_io(void)
+{
+	ixp4xx_map_io();
+
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_platform_port(0, &ixdp425_uart_data[0]);
+	kgdb8250_add_platform_port(1, &ixdp425_uart_data[1]);
+#endif
+}
+
 #ifdef CONFIG_ARCH_IXDP425
 MACHINE_START(IXDP425, "Intel IXDP425 Development Platform")
 	/* Maintainer: MontaVista Software, Inc. */
 	.phys_io	= IXP4XX_PERIPHERAL_BASE_PHYS,
 	.io_pg_offst	= ((IXP4XX_PERIPHERAL_BASE_VIRT) >> 18) & 0xfffc,
-	.map_io		= ixp4xx_map_io,
+	.map_io		= ixdp425_map_io,
 	.init_irq	= ixp4xx_init_irq,
 	.timer		= &ixp4xx_timer,
 	.boot_params	= 0x0100,
@@ -141,7 +154,7 @@ MACHINE_START(IXDP465, "Intel IXDP465 Development Platform")
 	/* Maintainer: MontaVista Software, Inc. */
 	.phys_io	= IXP4XX_PERIPHERAL_BASE_PHYS,
 	.io_pg_offst	= ((IXP4XX_PERIPHERAL_BASE_VIRT) >> 18) & 0xfffc,
-	.map_io		= ixp4xx_map_io,
+	.map_io		= ixdp425_map_io,
 	.init_irq	= ixp4xx_init_irq,
 	.timer		= &ixp4xx_timer,
 	.boot_params	= 0x0100,
@@ -154,7 +167,7 @@ MACHINE_START(IXCDP1100, "Intel IXCDP1100 Development Platform")
 	/* Maintainer: MontaVista Software, Inc. */
 	.phys_io	= IXP4XX_PERIPHERAL_BASE_PHYS,
 	.io_pg_offst	= ((IXP4XX_PERIPHERAL_BASE_VIRT) >> 18) & 0xfffc,
-	.map_io		= ixp4xx_map_io,
+	.map_io		= ixdp425_map_io,
 	.init_irq	= ixp4xx_init_irq,
 	.timer		= &ixp4xx_timer,
 	.boot_params	= 0x0100,

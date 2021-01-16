@@ -525,7 +525,7 @@ int s3c2410_dma_enqueue(unsigned int channel, void *id,
 		}
 	} else if (chan->state == S3C2410_DMA_IDLE) {
 		if (chan->flags & S3C2410_DMAF_AUTOSTART) {
-			s3c2410_dma_ctrl(chan->number, S3C2410_DMAOP_START);
+			s3c2410_dma_ctrl(chan->number | DMACH_LOW_LEVEL, S3C2410_DMAOP_START);
 		}
 	}
 
@@ -914,7 +914,7 @@ static int s3c2410_dma_flush(struct s3c2410_dma_chan *chan)
 
 	if (chan->state != S3C2410_DMA_IDLE) {
 		pr_debug("%s: stopping channel...\n", __FUNCTION__ );
-		s3c2410_dma_ctrl(chan->number, S3C2410_DMAOP_STOP);
+		s3c2410_dma_ctrl(chan->number | DMACH_LOW_LEVEL, S3C2410_DMAOP_STOP);
 	}
 
 	buf = chan->curr;

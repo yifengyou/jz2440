@@ -42,6 +42,9 @@
 #include <linux/tty.h>
 #include <linux/tty_flip.h>
 #include <linux/serial_core.h>
+#ifdef CONFIG_KGDB_CONSOLE
+#include <linux/kgdb.h>
+#endif
 
 #include <asm/io.h>
 #include <asm/hardware.h>
@@ -690,6 +693,8 @@ serial_pxa_console_init(void)
 console_initcall(serial_pxa_console_init);
 
 #define PXA_CONSOLE	&serial_pxa_console
+#elif defined(CONFIG_KGDB_CONSOLE)
+#define PXA_CONSOLE	&kgdbcons
 #else
 #define PXA_CONSOLE	NULL
 #endif

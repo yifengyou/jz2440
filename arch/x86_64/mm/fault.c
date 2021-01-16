@@ -534,6 +534,10 @@ no_context:
 	if (is_errata93(regs, address))
 		return; 
 
+	if (notify_die(DIE_PAGE_FAULT_NO_CONTEXT, "no context", regs,
+				error_code, 14, SIGSEGV) == NOTIFY_STOP)
+		return;
+
 /*
  * Oops. The kernel tried to access some bad page. We'll have to
  * terminate things with extreme prejudice.

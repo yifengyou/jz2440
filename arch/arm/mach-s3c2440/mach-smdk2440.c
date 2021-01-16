@@ -96,31 +96,96 @@ static struct s3c2410_uartcfg smdk2440_uartcfgs[] __initdata = {
 		.hwport	     = 2,
 		.flags	     = 0,
 		.ucon	     = 0x3c5,
-		.ulcon	     = 0x43,
+//		  .ulcon	   = 0x43,	// www.100ask.net
+		 .ulcon	   = 0x33,
 		.ufcon	     = 0x51,
 	}
 };
 
 /* LCD driver info */
-
-static struct s3c2410fb_mach_info smdk2440_lcd_cfg __initdata = {
+static struct s3c2410fb_mach_info smdk2440_lcd_cfg_1024x768 __initdata = {
 	.regs	= {
+		.lcdcon1 =	S3C2410_LCDCON1_TFT16BPP | \
+				S3C2410_LCDCON1_TFT | \
+				S3C2410_LCDCON1_CLKVAL(0x01),
 
-		.lcdcon1	= S3C2410_LCDCON1_TFT16BPP |
-				  S3C2410_LCDCON1_TFT |
+		.lcdcon2 =	S3C2410_LCDCON2_VBPD(1) | \
+				S3C2410_LCDCON2_LINEVAL(1023) | \
+				S3C2410_LCDCON2_VFPD(1) | \
+				S3C2410_LCDCON2_VSPW(1),
+
+		.lcdcon3 =	S3C2410_LCDCON3_HBPD(15) | \
+				S3C2410_LCDCON3_HOZVAL(767) | \
+				S3C2410_LCDCON3_HFPD(199),
+
+		.lcdcon4 =	S3C2410_LCDCON4_MVAL(13) | \
+				S3C2410_LCDCON4_HSPW(15),
+#if 0
+		.lcdcon5 =	S3C2410_LCDCON5_FRM565 |
+				S3C2410_LCDCON5_INVVLINE |
+				S3C2410_LCDCON5_INVVFRAME |
+				S3C2410_LCDCON5_PWREN |
+				S3C2410_LCDCON5_HWSWP,
+#else
+		.lcdcon5 =	S3C2410_LCDCON5_FRM565 |
+				S3C2410_LCDCON5_HWSWP,
+#endif
+	},
+
+	.lpcsel =	0xf82,
+
+	.gpccon =	0xaa955699,
+	.gpccon_mask =	0xffc003cc,
+	.gpcup =	0x0000ffff,
+	.gpcup_mask =	0xffffffff,
+
+	.gpdcon =	0xaa95aaa1,
+	.gpdcon_mask =	0xffc0fff0,
+	.gpdup =	0x0000faff,
+	.gpdup_mask =	0xffffffff,
+
+	.fixed_syncs =	1,
+        .type        =  S3C2410_LCDCON1_TFT, 
+	.width  =	1024,
+	.height =	768,
+
+	.xres	= {
+		.min =		1024,
+		.max =		1024,
+		.defval =	1024,
+	},
+
+	.yres	= {
+		.max =		768,
+		.min =		768,
+		.defval	=	768,
+	},
+
+	.bpp	= {
+		.min =		16,
+		.max =		16,
+		.defval =	16,
+	},
+};
+
+/* 240x320 */
+static struct s3c2410fb_mach_info smdk2440_lcd_cfg_240x320 __initdata = {
+    .regs   = {
+        .lcdcon1 =  S3C2410_LCDCON1_TFT16BPP | \
+                S3C2410_LCDCON1_TFT | \
 				  S3C2410_LCDCON1_CLKVAL(0x04),
 
-		.lcdcon2	= S3C2410_LCDCON2_VBPD(7) |
-				  S3C2410_LCDCON2_LINEVAL(319) |
-				  S3C2410_LCDCON2_VFPD(6) |
-				  S3C2410_LCDCON2_VSPW(3),
+        .lcdcon2 =  S3C2410_LCDCON2_VBPD(5) | \
+                S3C2410_LCDCON2_LINEVAL(319) | \
+                S3C2410_LCDCON2_VFPD(3) | \
+                S3C2410_LCDCON2_VSPW(1),
 
-		.lcdcon3	= S3C2410_LCDCON3_HBPD(19) |
-				  S3C2410_LCDCON3_HOZVAL(239) |
-				  S3C2410_LCDCON3_HFPD(7),
+        .lcdcon3 =  S3C2410_LCDCON3_HBPD(10) | \
+                S3C2410_LCDCON3_HOZVAL(239) | \
+                S3C2410_LCDCON3_HFPD(1),
 
-		.lcdcon4	= S3C2410_LCDCON4_MVAL(0) |
-				  S3C2410_LCDCON4_HSPW(3),
+        .lcdcon4 =  S3C2410_LCDCON4_MVAL(13) | \
+                S3C2410_LCDCON4_HSPW(0),
 
 		.lcdcon5	= S3C2410_LCDCON5_FRM565 |
 				  S3C2410_LCDCON5_INVVLINE |
@@ -129,21 +194,18 @@ static struct s3c2410fb_mach_info smdk2440_lcd_cfg __initdata = {
 				  S3C2410_LCDCON5_HWSWP,
 	},
 
-#if 0
-	/* currently setup by downloader */
-	.gpccon		= 0xaa940659,
+    .gpccon      =  0xaaaa56aa,
 	.gpccon_mask	= 0xffffffff,
-	.gpcup		= 0x0000ffff,
+    .gpcup       =  0xffffffff,
 	.gpcup_mask	= 0xffffffff,
-	.gpdcon		= 0xaa84aaa0,
+
+    .gpdcon      =  0xaaaaaaaa,
 	.gpdcon_mask	= 0xffffffff,
-	.gpdup		= 0x0000faff,
+    .gpdup       =  0xffffffff,
 	.gpdup_mask	= 0xffffffff,
-#endif
 
-	.lpcsel		= ((0xCE6) & ~7) | 1<<4,
-	.type		= S3C2410_LCDCON1_TFT16BPP,
-
+    .fixed_syncs =  1,
+    .type        =  S3C2410_LCDCON1_TFT, 
 	.width		= 240,
 	.height		= 320,
 
@@ -154,10 +216,131 @@ static struct s3c2410fb_mach_info smdk2440_lcd_cfg __initdata = {
 	},
 
 	.yres		= {
+        .max    =   320,
+        .min    =   320,
+        .defval =   320,
+    },
+
+    .bpp    = {
+        .min    =   16,
+        .max    =   16,
+        .defval =   16,
+    },
+};
+
+/* 480x272 */
+static struct s3c2410fb_mach_info smdk2440_lcd_cfg __initdata = {
+    .regs   = {
+        .lcdcon1 =  S3C2410_LCDCON1_TFT16BPP | \
+                S3C2410_LCDCON1_TFT | \
+				  S3C2410_LCDCON1_CLKVAL(0x04),
+
+        .lcdcon2 =  S3C2410_LCDCON2_VBPD(1) | \
+                S3C2410_LCDCON2_LINEVAL(271) | \
+                S3C2410_LCDCON2_VFPD(1) | \
+                S3C2410_LCDCON2_VSPW(9),
+
+        .lcdcon3 =  S3C2410_LCDCON3_HBPD(1) | \
+                S3C2410_LCDCON3_HOZVAL(479) | \
+                S3C2410_LCDCON3_HFPD(1),
+
+        .lcdcon4 =  S3C2410_LCDCON4_HSPW(40),
+
+		.lcdcon5	= S3C2410_LCDCON5_FRM565 |
+				  S3C2410_LCDCON5_INVVLINE |
+				  S3C2410_LCDCON5_INVVFRAME |
+				  S3C2410_LCDCON5_PWREN |
+				  S3C2410_LCDCON5_HWSWP,
+	},
+
+    .gpccon      =  0xaaaaaaaa,
+	.gpccon_mask	= 0xffffffff,
+    .gpcup       =  0xffffffff,
+	.gpcup_mask	= 0xffffffff,
+
+    .gpdcon      =  0xaaaaaaaa,
+	.gpdcon_mask	= 0xffffffff,
+    .gpdup       =  0xffffffff,
+	.gpdup_mask	= 0xffffffff,
+
+    .fixed_syncs =  1,
+    .type        =  S3C2410_LCDCON1_TFT, 
+	.width		= 480,
+	.height		= 272,
+
+	.xres		= {
+		.min	= 480,
+		.max	= 480,
+		.defval	= 480,
+	},
+
+	.yres		= {
+        .max    =   272,
+        .min    =   272,
+        .defval =   272,
+    },
+
+    .bpp    = {
+        .min    =   16,
+        .max    =   16,
+        .defval =   16,
+    },
+};
+
+
+/* 320x240 */
+static struct s3c2410fb_mach_info smdk2440_lcd_cfg_320x240 __initdata = {
+    .regs   = {
+        .lcdcon1 =  S3C2410_LCDCON1_TFT16BPP | \
+                S3C2410_LCDCON1_TFT | \
+                S3C2410_LCDCON1_CLKVAL(0x04),
+
+        .lcdcon2 =  S3C2410_LCDCON2_VBPD(1) | \
+                S3C2410_LCDCON2_LINEVAL(239) | \
+                S3C2410_LCDCON2_VFPD(5) | \
+                S3C2410_LCDCON2_VSPW(1),
+
+        .lcdcon3 =  S3C2410_LCDCON3_HBPD(36) | \
+                S3C2410_LCDCON3_HOZVAL(319) | \
+                S3C2410_LCDCON3_HFPD(19),
+
+        .lcdcon4 =  S3C2410_LCDCON4_MVAL(13) | \
+                S3C2410_LCDCON4_HSPW(5),
+
+        .lcdcon5 =  S3C2410_LCDCON5_FRM565 |
+                S3C2410_LCDCON5_INVVLINE |
+                S3C2410_LCDCON5_INVVFRAME |
+				S3C2410_LCDCON5_INVVDEN |
+                S3C2410_LCDCON5_PWREN |
+                S3C2410_LCDCON5_HWSWP,
+    },
+
+    .gpccon      =  0xaaaa56aa,
+    .gpccon_mask =  0xffffffff,
+    .gpcup       =  0xffffffff,
+    .gpcup_mask  =  0xffffffff,
+
+    .gpdcon      =  0xaaaaaaaa,
+    .gpdcon_mask =  0xffffffff,
+    .gpdup       =  0xffffffff,
+    .gpdup_mask  =  0xffffffff,
+
+    .fixed_syncs =  1,
+    .type        =  S3C2410_LCDCON1_TFT, 
+    .width       =  320,
+    .height      =  240,
+
+    .xres   = {
 		.min	= 320,
 		.max	= 320,
 		.defval = 320,
 	},
+
+    .yres   = {
+        .max    =   240,
+        .min    =   240,
+        .defval =   240,
+    },
 
 	.bpp		= {
 		.min	= 16,
@@ -166,18 +349,42 @@ static struct s3c2410fb_mach_info smdk2440_lcd_cfg __initdata = {
 	},
 };
 
+
+/* SDI */
+static struct resource s3c2440_sdi_resource[] = {
+    [0] = {
+        .start = S3C2410_PA_SDI,
+        .end   = S3C2410_PA_SDI + S3C24XX_SZ_SDI - 1,
+        .flags = IORESOURCE_MEM,
+    },
+    [1] = {
+        .start = IRQ_SDI,
+        .end   = IRQ_SDI,
+        .flags = IORESOURCE_IRQ,
+    }
+
+};
+
+static struct platform_device s3c2440_device_sdi = {
+    .name         = "s3c2440-sdi",
+    .id       = -1,
+    .num_resources    = ARRAY_SIZE(s3c2440_sdi_resource),
+    .resource     = s3c2440_sdi_resource,
+};
+
 static struct platform_device *smdk2440_devices[] __initdata = {
 	&s3c_device_usb,
 	&s3c_device_lcd,
 	&s3c_device_wdt,
 	&s3c_device_i2c,
 	&s3c_device_iis,
+    &s3c2440_device_sdi,
 };
 
 static void __init smdk2440_map_io(void)
 {
 	s3c24xx_init_io(smdk2440_iodesc, ARRAY_SIZE(smdk2440_iodesc));
-	s3c24xx_init_clocks(16934400);
+    s3c24xx_init_clocks(12000000);
 	s3c24xx_init_uarts(smdk2440_uartcfgs, ARRAY_SIZE(smdk2440_uartcfgs));
 }
 

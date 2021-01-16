@@ -19,16 +19,17 @@
 #include <linux/tty.h>	/* for linux/serial_core.h */
 #include <linux/serial_core.h>
 #include <linux/serial_8250.h>
+#include <linux/kgdb.h>
 
 #include <asm/time.h>
 #include <asm/mpc85xx.h>
 #include <asm/immap_85xx.h>
 #include <asm/mmu.h>
 #include <asm/ppc_sys.h>
-#include <asm/kgdb.h>
 #include <asm/machdep.h>
 
 #include <syslib/ppc85xx_setup.h>
+#include <syslib/gen550.h>
 
 extern void abort(void);
 
@@ -69,11 +70,11 @@ mpc85xx_calibrate_decr(void)
 	mtspr(SPRN_TCR, TCR_DIE);
 }
 
-#ifdef CONFIG_SERIAL_8250
+#if defined(CONFIG_SERIAL_8250) || defined(CONFIG_KGDB_8250)
 void __init
 mpc85xx_early_serial_map(void)
 {
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB_8250)
 	struct uart_port serial_req;
 #endif
 	struct plat_serial8250_port *pdata;
@@ -85,26 +86,39 @@ mpc85xx_early_serial_map(void)
 	pdata[0].mapbase += binfo->bi_immr_base;
 	pdata[0].membase = ioremap(pdata[0].mapbase, MPC85xx_UART0_SIZE);
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB_8250)
 	memset(&serial_req, 0, sizeof (serial_req));
 	serial_req.iotype = UPIO_MEM;
 	serial_req.mapbase = pdata[0].mapbase;
 	serial_req.membase = pdata[0].membase;
 	serial_req.regshift = 0;
+	serial_req.irq = pdata[0].irq;
+	serial_req.flags = pdata[0].flags;
+	serial_req.uartclk = pdata[0].uartclk;
 
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 	gen550_init(0, &serial_req);
+#endif
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(0, &serial_req);
+#endif
 #endif
 
 	pdata[1].uartclk = binfo->bi_busfreq;
 	pdata[1].mapbase += binfo->bi_immr_base;
 	pdata[1].membase = ioremap(pdata[1].mapbase, MPC85xx_UART0_SIZE);
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB_8250)
 	/* Assume gen550_init() doesn't modify serial_req */
 	serial_req.mapbase = pdata[1].mapbase;
 	serial_req.membase = pdata[1].membase;
 
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 	gen550_init(1, &serial_req);
+#endif
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(1, &serial_req);
+#endif
 #endif
 }
 #endif
@@ -363,5 +377,3 @@ mpc85xx_setup_hose(void)
 	return;
 }
 #endif /* CONFIG_PCI */
-
-

@@ -28,6 +28,7 @@ enum die_val {
 	DIE_CALL,
 	DIE_NMI_IPI,
 	DIE_PAGE_FAULT,
+	DIE_PAGE_FAULT_NO_CONTEXT,
 };
 
 #endif

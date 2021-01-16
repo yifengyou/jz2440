@@ -30,12 +30,12 @@
 #include <linux/tty.h>	/* for linux/serial_core.h */
 #include <linux/serial_core.h>
 #include <linux/serial_8250.h>
+#include <linux/kgdb.h>
 
 #include <asm/time.h>
 #include <asm/mpc83xx.h>
 #include <asm/mmu.h>
 #include <asm/ppc_sys.h>
-#include <asm/kgdb.h>
 #include <asm/delay.h>
 #include <asm/machdep.h>
 
@@ -44,6 +44,7 @@
 #include <asm/delay.h>
 #include <syslib/ppc83xx_pci.h>
 #endif
+#include <syslib/gen550.h>
 
 phys_addr_t immrbar;
 
@@ -87,11 +88,11 @@ mpc83xx_calibrate_decr(void)
 	tb_to_us = mulhwu_scale_factor(freq / divisor, 1000000);
 }
 
-#ifdef CONFIG_SERIAL_8250
+#if defined(CONFIG_SERIAL_8250) || defined(CONFIG_KGDB_8250)
 void __init
 mpc83xx_early_serial_map(void)
 {
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB_8250)
 	struct uart_port serial_req;
 #endif
 	struct plat_serial8250_port *pdata;
@@ -103,26 +104,39 @@ mpc83xx_early_serial_map(void)
 	pdata[0].mapbase += binfo->bi_immr_base;
 	pdata[0].membase = ioremap(pdata[0].mapbase, 0x100);
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB_8250)
 	memset(&serial_req, 0, sizeof (serial_req));
 	serial_req.iotype = UPIO_MEM;
 	serial_req.mapbase = pdata[0].mapbase;
 	serial_req.membase = pdata[0].membase;
 	serial_req.regshift = 0;
+	serial_req.irq = pdata[0].irq;
+	serial_req.flags = pdata[0].flags;
+	serial_req.uartclk = pdata[0].uartclk;
 
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 	gen550_init(0, &serial_req);
+#endif
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(0, &serial_req);
+#endif
 #endif
 
 	pdata[1].uartclk = binfo->bi_busfreq;
 	pdata[1].mapbase += binfo->bi_immr_base;
 	pdata[1].membase = ioremap(pdata[1].mapbase, 0x100);
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB_8250)
 	/* Assume gen550_init() doesn't modify serial_req */
 	serial_req.mapbase = pdata[1].mapbase;
 	serial_req.membase = pdata[1].membase;
 
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 	gen550_init(1, &serial_req);
+#endif
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(1, &serial_req);
+#endif
 #endif
 }
 #endif

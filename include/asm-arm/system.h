@@ -360,6 +360,42 @@ static inline unsigned long __xchg(unsigned long x, volatile void *ptr, int size
 extern void disable_hlt(void);
 extern void enable_hlt(void);
 
+#ifndef CONFIG_SMP
+/*
+ * Atomic compare and exchange.
+ */
+#define __HAVE_ARCH_CMPXCHG	1
+
+extern unsigned long wrong_size_cmpxchg(volatile void *ptr);
+
+static inline unsigned long __cmpxchg(volatile void *ptr,
+				    unsigned long old,
+				    unsigned long new, int size)
+{
+	unsigned long flags, prev;
+	volatile unsigned long *p = ptr;
+
+	if (size == 4) {
+		local_irq_save(flags);
+		prev = *p;
+		if (prev == old)
+			*p = new;
+		local_irq_restore(flags);
+		return(prev);
+	} else
+		return wrong_size_cmpxchg(ptr);
+}
+
+#define cmpxchg(ptr, o, n)					  	\
+({									\
+     __typeof__(*(ptr)) _o_ = (o);					\
+     __typeof__(*(ptr)) _n_ = (n);					\
+     (__typeof__(*(ptr))) __cmpxchg((ptr), (unsigned long)_o_,		\
+		(unsigned long)_n_, sizeof(*(ptr)));	\
+})
+
+#endif
+
 #endif /* __ASSEMBLY__ */
 
 #define arch_align_stack(x) (x)

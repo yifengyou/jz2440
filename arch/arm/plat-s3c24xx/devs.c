@@ -33,6 +33,8 @@
 
 #include <asm/plat-s3c24xx/devs.h>
 #include <asm/plat-s3c24xx/cpu.h>
+#include <asm/plat-s3c24xx/ts.h>
+
 #include <asm/arch/regs-spi.h>
 
 /* Serial port registrations */
@@ -206,6 +208,25 @@ struct platform_device s3c_device_nand = {
 };
 
 EXPORT_SYMBOL(s3c_device_nand);
+
+#ifdef CONFIG_TOUCHSCREEN_S3C2410
+
+/* Touchscreen */
+struct platform_device s3c_device_ts = {
+	.name		  = "s3c2410-ts",
+	.id		  = -1,
+};
+
+EXPORT_SYMBOL(s3c_device_ts);
+
+static struct s3c2410_ts_mach_info s3c2410ts_info;
+
+void __init set_s3c2410ts_info(struct s3c2410_ts_mach_info *hard_s3c2410ts_info)
+{
+	memcpy(&s3c2410ts_info, hard_s3c2410ts_info, sizeof(struct s3c2410_ts_mach_info));
+	s3c_device_ts.dev.platform_data = &s3c2410ts_info;
+}
+#endif
 
 /* USB Device (Gadget)*/
 

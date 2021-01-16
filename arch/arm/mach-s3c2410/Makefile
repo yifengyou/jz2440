@@ -29,3 +29,4 @@ obj-$(CONFIG_MACH_AML_M5900)	+= mach-amlm5900.o
 obj-$(CONFIG_BAST_PC104_IRQ)	+= bast-irq.o
 obj-$(CONFIG_MACH_VR1000)	+= mach-vr1000.o usb-simtec.o
 obj-$(CONFIG_MACH_QT2410)	+= mach-qt2410.o
+obj-$(CONFIG_KGDB_S3C24XX_SERIAL) += kgdb-serial.o

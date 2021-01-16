@@ -57,7 +57,8 @@
 #define	MV64x60_IRQ_I2C				37
 #define	MV64x60_IRQ_BRG				39
 #define	MV64x60_IRQ_MPSC_0			40
-#define	MV64x60_IRQ_MPSC_1			42
+#define	MV64360_IRQ_MPSC_1			41
+#define	GT64260_IRQ_MPSC_1			42
 #define	MV64x60_IRQ_COMM			43
 #define	MV64x60_IRQ_P0_GPP_0_7			56
 #define	MV64x60_IRQ_P0_GPP_8_15			57

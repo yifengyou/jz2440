@@ -44,6 +44,11 @@
 #include <asm/io.h>
 #include <asm/irq.h>
 
+/* for extend serial chip, www.100ask.net */
+#ifdef CONFIG_SERIAL_EXTEND_S3C24xx
+#include <asm/arch-s3c2410/regs-mem.h>
+#endif
+
 #include "8250.h"
 
 /*
@@ -1544,6 +1549,9 @@ static int serial_link_irq_chain(struct uart_8250_port *up)
 		i->head = &up->list;
 		spin_unlock_irq(&i->lock);
 
+#ifdef CONFIG_SERIAL_EXTEND_S3C24xx
+        irq_flags |= IRQF_TRIGGER_HIGH; //IRQF_TRIGGER_RISING;
+#endif
 		ret = request_irq(up->port.irq, serial8250_interrupt,
 				  irq_flags, "serial", i);
 		if (ret < 0)
@@ -2845,6 +2853,25 @@ void serial8250_unregister_port(int line)
 }
 EXPORT_SYMBOL(serial8250_unregister_port);
 
+/**
+ *	serial8250_unregister_by_port - remove a 16x50 serial port
+ *	at runtime.
+ *	@port: A &struct uart_port that describes the port to remove.
+ *
+ *	Remove one serial port.  This may not be called from interrupt
+ *	context.  We hand the port back to the our control.
+ */
+void serial8250_unregister_by_port(struct uart_port *port)
+{
+	struct uart_8250_port *uart;
+
+	uart = serial8250_find_match_or_unused(port);
+
+	if (uart)
+		serial8250_unregister_port(uart->port.line);
+}
+EXPORT_SYMBOL(serial8250_unregister_by_port);
+
 static int __init serial8250_init(void)
 {
 	int ret, i;
@@ -2855,6 +2882,12 @@ static int __init serial8250_init(void)
 	printk(KERN_INFO "Serial: 8250/16550 driver $Revision: 1.90 $ "
 		"%d ports, IRQ sharing %sabled\n", nr_uarts,
 		share_irqs ? "en" : "dis");
+
+#ifdef CONFIG_SERIAL_EXTEND_S3C24xx
+    /* set bus width of bank5 as 8, www.100ask.net */
+    *((volatile unsigned int *)S3C2410_BWSCON) = ((*((volatile unsigned int *)S3C2410_BWSCON)) & ~(3<<20)) \
+                                                  | S3C2410_BWSCON_DW5_8;
+#endif    
 
 	for (i = 0; i < NR_IRQS; i++)
 		spin_lock_init(&irq_lists[i].lock);

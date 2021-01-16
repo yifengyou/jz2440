@@ -36,6 +36,7 @@
 #include <linux/delay.h>
 #include <linux/tick.h>
 #include <linux/kallsyms.h>
+#include <linux/kgdb.h>
 
 #include <asm/uaccess.h>
 #include <asm/unistd.h>
@@ -882,7 +883,11 @@ static void run_timer_softirq(struct softirq_action *h)
  */
 void run_local_timers(void)
 {
+	int this_cpu = smp_processor_id();
 	raise_softirq(TIMER_SOFTIRQ);
+#ifdef CONFIG_KGDB
+	if (!atomic_read(&kgdb_sync_softlockup[this_cpu]))
+#endif
 	softlockup_tick();
 }
 

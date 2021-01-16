@@ -13,6 +13,7 @@
 #include <linux/kthread.h>
 #include <linux/notifier.h>
 #include <linux/module.h>
+#include <linux/kgdb.h>
 
 static DEFINE_SPINLOCK(print_lock);
 
@@ -47,6 +48,9 @@ static unsigned long get_timestamp(void)
 void touch_softlockup_watchdog(void)
 {
 	__raw_get_cpu_var(touch_timestamp) = get_timestamp();
+#ifdef CONFIG_KGDB
+	atomic_set(&kgdb_sync_softlockup[raw_smp_processor_id()], 0);
+#endif
 }
 EXPORT_SYMBOL(touch_softlockup_watchdog);
 

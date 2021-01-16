@@ -7,5 +7,4 @@
 #
 
 obj-y	+= prom.o setup.o irq.o rtc_rx5c348.o
-obj-$(CONFIG_KGDB) += dbgio.o
 

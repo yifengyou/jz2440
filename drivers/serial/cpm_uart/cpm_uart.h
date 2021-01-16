@@ -50,6 +50,41 @@
 
 #define SCC_WAIT_CLOSING 100
 
+#ifdef CONFIG_KGDB_CPM_UART
+
+/* Speed of the debug UART. */
+#if CONFIG_KGDB_BAUDRATE == 9600
+#define KGDB_BAUD B9600
+#elif CONFIG_KGDB_BAUDRATE == 19200
+#define KGDB_BAUD B19200
+#elif CONFIG_KGDB_BAUDRATE == 38400
+#define KGDB_BAUD B38400
+#elif CONFIG_KGDB_BAUDRATE == 57600
+#define KGDB_BAUD B57600
+#elif CONFIG_KGDB_BAUDRATE == 115200
+#define KGDB_BAUD B115200	/* Start with this if not given */
+#else
+#error Unsupported baud rate
+#endif
+
+#if defined(CONFIG_KGDB_CPM_UART_SCC1)
+#define KGDB_PINFO_INDEX 	UART_SCC1
+#elif defined(CONFIG_KGDB_CPM_UART_SCC2)
+#define KGDB_PINFO_INDEX	UART_SCC2
+#elif defined(CONFIG_KGDB_CPM_UART_SCC3)
+#define KGDB_PINFO_INDEX	UART_SCC3
+#elif defined(CONFIG_KGDB_CPM_UART_SCC4)
+#define KGDB_PINFO_INDEX	UART_SCC4
+#elif defined(CONFIG_KGDB_CPM_UART_SMC1)
+#define KGDB_PINFO_INDEX	UART_SMC1
+#elif defined(CONFIG_KGDB_CPM_UART_SMC2)
+#define KGDB_PINFO_INDEX	UART_SMC2
+#else
+#error The port for KGDB is undefined
+#endif
+
+#endif /* CONFIG_KGDB_CPM_UART */
+
 struct uart_cpm_port {
 	struct uart_port	port;
 	u16			rx_nrfifos;
@@ -85,6 +120,9 @@ struct uart_cpm_port {
 extern int cpm_uart_port_map[UART_NR];
 extern int cpm_uart_nr;
 extern struct uart_cpm_port cpm_uart_ports[UART_NR];
+
+void cpm_uart_early_write(int index, const char *s, u_int count);
+int cpm_uart_early_setup(int index, int early);
 
 /* these are located in their respective files */
 void cpm_line_cr_cmd(int line, int cmd);
@@ -131,6 +169,5 @@ static inline void *cpm2cpu_addr(unsigned long addr, struct uart_cpm_port *pinfo
 	BUG();
 	return 0;
 }
-
 
 #endif /* CPM_UART_H */

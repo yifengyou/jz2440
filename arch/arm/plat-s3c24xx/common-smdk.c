@@ -43,6 +43,15 @@
 #include <asm/plat-s3c24xx/common-smdk.h>
 #include <asm/plat-s3c24xx/devs.h>
 #include <asm/plat-s3c24xx/pm.h>
+#if defined(CONFIG_DM9000) || defined(CONFIG_DM9000_MODULE)
+#include <linux/dm9000.h>
+#endif
+#ifdef CONFIG_SERIAL_EXTEND_S3C24xx
+#include <linux/serial_8250.h>
+#endif
+#ifdef CONFIG_TOUCHSCREEN_S3C2410
+#include <asm/plat-s3c24xx/ts.h>
+#endif
 
 /* LED devices */
 
@@ -108,44 +117,24 @@ static struct platform_device smdk_led7 = {
 
 static struct mtd_partition smdk_default_nand_part[] = {
 	[0] = {
-		.name	= "Boot Agent",
-		.size	= SZ_16K,
+        .name   = "bootloader",
+        .size   = 0x00040000,
 		.offset	= 0,
 	},
 	[1] = {
-		.name	= "S3C2410 flash partition 1",
-		.offset = 0,
-		.size	= SZ_2M,
+        .name   = "params",
+        .offset = MTDPART_OFS_APPEND,
+        .size   = 0x00020000,
 	},
 	[2] = {
-		.name	= "S3C2410 flash partition 2",
-		.offset = SZ_4M,
-		.size	= SZ_4M,
+        .name   = "kernel",
+        .offset = MTDPART_OFS_APPEND,
+        .size   = 0x00200000,
 	},
 	[3] = {
-		.name	= "S3C2410 flash partition 3",
-		.offset	= SZ_8M,
-		.size	= SZ_2M,
-	},
-	[4] = {
-		.name	= "S3C2410 flash partition 4",
-		.offset = SZ_1M * 10,
-		.size	= SZ_4M,
-	},
-	[5] = {
-		.name	= "S3C2410 flash partition 5",
-		.offset	= SZ_1M * 14,
-		.size	= SZ_1M * 10,
-	},
-	[6] = {
-		.name	= "S3C2410 flash partition 6",
-		.offset	= SZ_1M * 24,
-		.size	= SZ_1M * 24,
-	},
-	[7] = {
-		.name	= "S3C2410 flash partition 7",
-		.offset = SZ_1M * 48,
-		.size	= SZ_16M,
+        .name   = "root",
+        .offset = MTDPART_OFS_APPEND,
+        .size   = MTDPART_SIZ_FULL,
 	}
 };
 
@@ -170,6 +159,86 @@ static struct s3c2410_platform_nand smdk_nand_info = {
 	.sets		= smdk_nand_sets,
 };
 
+#if defined(CONFIG_DM9000) || defined(CONFIG_DM9000_MODULE)
+/* DM9000 */
+static struct resource s3c_dm9k_resource[] = {
+    [0] = {
+        .start = S3C2410_CS4,       /* ADDR2=0，发送地址时使用这个地址 */
+        .end   = S3C2410_CS4 + 3,
+        .flags = IORESOURCE_MEM,
+    },
+    [1] = {
+        .start = S3C2410_CS4 + 4,   /* ADDR2=1，传输数据时使用这个地址 */
+        .end   = S3C2410_CS4 + 4 + 3,
+        .flags = IORESOURCE_MEM,
+    },
+    [2] = {
+        .start = IRQ_EINT7,         /* 中断号 */
+        .end   = IRQ_EINT7,
+        .flags = IORESOURCE_IRQ,
+    }
+
+};
+
+/* for the moment we limit ourselves to 16bit IO until some
+ * better IO routines can be written and tested
+*/
+
+static struct dm9000_plat_data s3c_dm9k_platdata = {
+    .flags      = DM9000_PLATF_16BITONLY,
+};
+
+static struct platform_device s3c_device_dm9k = {
+    .name       = "dm9000",
+    .id     = 0,
+    .num_resources  = ARRAY_SIZE(s3c_dm9k_resource),
+    .resource   = s3c_dm9k_resource,
+    .dev        = {
+        .platform_data = &s3c_dm9k_platdata,
+    }
+};
+#endif /* CONFIG_DM9000 */
+
+/* for extend serial chip, www.100ask.net */
+#ifdef CONFIG_SERIAL_EXTEND_S3C24xx
+static struct plat_serial8250_port s3c_device_8250_data[] = {
+    [0] = {
+        .mapbase    = 0x28000000,
+        .irq        = IRQ_EINT17,
+        .flags      = (UPF_BOOT_AUTOCONF | UPF_IOREMAP | UPF_SHARE_IRQ),
+        .iotype     = UPIO_MEM,
+        .regshift   = 0,
+        .uartclk    = 14745600, // 115200*16,
+    },
+    [1] = {
+        .mapbase    = 0x29000000,
+        .irq        = IRQ_EINT18,
+        .flags      = (UPF_BOOT_AUTOCONF | UPF_IOREMAP | UPF_SHARE_IRQ),
+        .iotype     = UPIO_MEM,
+        .regshift   = 0,
+        .uartclk    = 14745600, // 115200*16,
+    },
+    { }
+};
+
+static struct platform_device s3c_device_8250 = {
+    .name           = "serial8250",
+    .id             = 0,
+    .dev            = {
+        .platform_data  = &s3c_device_8250_data,
+    },
+};
+
+#endif
+
+#ifdef CONFIG_TOUCHSCREEN_S3C2410
+static struct s3c2410_ts_mach_info s3c2410_ts_cfg = {
+        .delay = 10000,
+        .presc = 49,
+        .oversampling_shift = 2,
+};
+#endif
+
 /* devices we initialise */
 
 static struct platform_device __initdata *smdk_devs[] = {
@@ -178,6 +247,15 @@ static struct platform_device __initdata *smdk_devs[] = {
 	&smdk_led5,
 	&smdk_led6,
 	&smdk_led7,
+#if defined(CONFIG_DM9000) || defined(CONFIG_DM9000_MODULE)
+    &s3c_device_dm9k,
+#endif    
+#ifdef CONFIG_SERIAL_EXTEND_S3C24xx
+    &s3c_device_8250,
+#endif
+#ifdef CONFIG_TOUCHSCREEN_S3C2410
+	&s3c_device_ts,
+#endif
 };
 
 void __init smdk_machine_init(void)
@@ -198,7 +276,9 @@ void __init smdk_machine_init(void)
 		smdk_nand_info.twrph0 = 50;
 
 	s3c_device_nand.dev.platform_data = &smdk_nand_info;
-
+#ifdef CONFIG_TOUCHSCREEN_S3C2410
+	set_s3c2410ts_info(&s3c2410_ts_cfg);
+#endif
 	platform_add_devices(smdk_devs, ARRAY_SIZE(smdk_devs));
 
 	s3c2410_pm_init();

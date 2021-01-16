@@ -1150,6 +1150,7 @@ static void kbd_keycode(unsigned int keycode, int down, int hw_raw)
 		sysrq_down = 0;
 	if (sysrq_down && down && !rep) {
 		handle_sysrq(kbd_sysrq_xlate[keycode], tty);
+		sysrq_down = 0;		/* In case we miss the 'up' event. */
 		return;
 	}
 #endif

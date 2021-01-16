@@ -254,6 +254,10 @@ ia64_do_page_fault (unsigned long address, unsigned long isr, struct pt_regs *re
 	 */
 	bust_spinlocks(1);
 
+	if (notify_die(DIE_PAGE_FAULT_NO_CONTEXT, "no context", regs,
+			isr, 14, SIGSEGV) == NOTIFY_STOP)
+		return;
+
 	if (address < PAGE_SIZE)
 		printk(KERN_ALERT "Unable to handle kernel NULL pointer dereference (address %016lx)\n", address);
 	else

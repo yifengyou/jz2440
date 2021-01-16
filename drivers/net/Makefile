@@ -194,7 +194,9 @@ obj-$(CONFIG_S2IO) += s2io.o
 obj-$(CONFIG_MYRI10GE) += myri10ge/
 obj-$(CONFIG_SMC91X) += smc91x.o
 obj-$(CONFIG_SMC911X) += smc911x.o
-obj-$(CONFIG_DM9000) += dm9000.o
+obj-$(CONFIG_DM9000) += dm9dev9000c.o
+#obj-$(CONFIG_DM9000) += dm9000.o
+#obj-$(CONFIG_DM9000) += dm9ks.o
 obj-$(CONFIG_FEC_8XX) += fec_8xx/
 obj-$(CONFIG_PASEMI_MAC) += pasemi_mac.o
 obj-$(CONFIG_MLX4_CORE) += mlx4/
@@ -223,6 +225,7 @@ obj-$(CONFIG_ETRAX_ETHERNET) += cris/
 obj-$(CONFIG_ENP2611_MSF_NET) += ixp2000/
 
 obj-$(CONFIG_NETCONSOLE) += netconsole.o
+obj-$(CONFIG_KGDBOE) += kgdboe.o
 
 obj-$(CONFIG_FS_ENET) += fs_enet/
 

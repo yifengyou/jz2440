@@ -60,6 +60,9 @@ struct mmc_command {
 #define MMC_ERR_FIFO	3
 #define MMC_ERR_FAILED	4
 #define MMC_ERR_INVALID	5
+#define MMC_ERR_DMA     6
+#define MMC_ERR_BUSY    7
+#define MMC_ERR_CANCELED 8
 
 	struct mmc_data		*data;		/* data segment associated with cmd */
 	struct mmc_request	*mrq;		/* associated request */

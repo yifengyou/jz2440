@@ -30,7 +30,7 @@
 #include <asm/io.h>
 #include <asm/bootinfo.h>
 #include <asm/tx4938/rbtx4938.h>
-#ifdef CONFIG_SERIAL_TXX9
+#if defined(CONFIG_SERIAL_TXX9) || defined(CONFIG_KGDB_TXX9)
 #include <linux/tty.h>
 #include <linux/serial.h>
 #include <linux/serial_core.h>
@@ -924,9 +924,10 @@ void __init toshiba_rbtx4938_setup(void)
 	set_io_port_base(RBTX4938_ETHER_BASE);
 #endif
 
-#ifdef CONFIG_SERIAL_TXX9
+#if defined (CONFIG_SERIAL_TXX9) || defined (CONFIG_KGDB_TXX9)
 	{
 		extern int early_serial_txx9_setup(struct uart_port *port);
+		extern int txx9_kgdb_add_port(int n, struct uart_port *port);
 		int i;
 		struct uart_port req;
 		for(i = 0; i < 2; i++) {
@@ -938,7 +939,12 @@ void __init toshiba_rbtx4938_setup(void)
 			req.irq = 32 + i;
 			req.flags |= UPF_BUGGY_UART /*HAVE_CTS_LINE*/;
 			req.uartclk = 50000000;
+#ifdef CONFIG_SERIAL_TXX9
 			early_serial_txx9_setup(&req);
+#endif
+#ifdef CONFIG_KGDB_TXX9
+			txx9_kgdb_add_port(i, &req);
+#endif
 		}
 	}
 #ifdef CONFIG_SERIAL_TXX9_CONSOLE

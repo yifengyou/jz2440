@@ -30,6 +30,7 @@
 #include <linux/tty.h>
 #include <linux/serial.h>
 #include <linux/serial_core.h>
+#include <linux/kgdb.h>
 
 #include <asm/system.h>
 #include <asm/pgtable.h>
@@ -283,6 +284,9 @@ luan_early_serial_map(void)
 	if (early_serial_setup(&port) != 0) {
 		printk("Early serial init of port 0 failed\n");
 	}
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(0, &port);
+#endif
 
 	port.membase = ioremap64(PPC440SP_UART1_ADDR, 8);
 	port.irq = UART1_INT;
@@ -292,6 +296,9 @@ luan_early_serial_map(void)
 	if (early_serial_setup(&port) != 0) {
 		printk("Early serial init of port 1 failed\n");
 	}
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(1, &port);
+#endif
 
 	port.membase = ioremap64(PPC440SP_UART2_ADDR, 8);
 	port.irq = UART2_INT;
@@ -301,6 +308,9 @@ luan_early_serial_map(void)
 	if (early_serial_setup(&port) != 0) {
 		printk("Early serial init of port 2 failed\n");
 	}
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(2, &port);
+#endif
 }
 
 static void __init
@@ -360,7 +370,4 @@ void __init platform_init(unsigned long r3, unsigned long r4,
 	ppc_md.get_irq = NULL;		/* Set in ppc4xx_pic_init() */
 
 	ppc_md.calibrate_decr = luan_calibrate_decr;
-#ifdef CONFIG_KGDB
-	ppc_md.early_serial_map = luan_early_serial_map;
-#endif
 }

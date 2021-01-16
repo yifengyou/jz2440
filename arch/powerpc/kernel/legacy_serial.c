@@ -11,6 +11,9 @@
 #include <asm/udbg.h>
 #include <asm/pci-bridge.h>
 #include <asm/ppc-pci.h>
+#ifdef CONFIG_KGDB_8250
+#include <linux/kgdb.h>
+#endif
 
 #undef DEBUG
 
@@ -487,6 +490,9 @@ static int __init serial_dev_init(void)
 			fixup_port_pio(i, np, port);
 		if ((port->iotype == UPIO_MEM) || (port->iotype == UPIO_TSI))
 			fixup_port_mmio(i, np, port);
+#ifdef CONFIG_KGDB_8250
+		kgdb8250_add_platform_port(i, port);
+#endif
 	}
 
 	DBG("Registering platform serial ports\n");

@@ -30,6 +30,7 @@
 #include <linux/serial_core.h>
 #include <linux/platform_device.h>
 #include <linux/serial_8250.h>
+#include <linux/kgdb.h>
 
 #include <asm/io.h>
 #include <asm/irq.h>
@@ -413,6 +414,11 @@ static void __init ixdp2x01_init_machine(void)
 	platform_add_devices(ixdp2x01_devices, ARRAY_SIZE(ixdp2x01_devices));
 	ixp2000_uart_init();
 	ixdp2x01_uart_init();
+
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_platform_port(0, ixdp2x01_serial_port1);
+	kgdb8250_add_platform_port(1, ixdp2x01_serial_port1);
+#endif
 }
 
 

@@ -192,9 +192,6 @@ void __init ibm44x_platform_init(unsigned long r3, unsigned long r4, unsigned lo
 #ifdef CONFIG_SERIAL_TEXT_DEBUG
 	ppc_md.progress = gen550_progress;
 #endif /* CONFIG_SERIAL_TEXT_DEBUG */
-#ifdef CONFIG_KGDB
-	ppc_md.kgdb_map_scc = gen550_kgdb_map_scc;
-#endif
 
 	/*
 	 * The Abatron BDI JTAG debugger does not tolerate others

@@ -154,8 +154,12 @@ __kprobes ia64_bad_break (unsigned long break_num, struct pt_regs *regs)
 		break;
 
 	      default:
-		if (break_num < 0x40000 || break_num > 0x100000)
+		if (break_num < 0x40000 || break_num > 0x100000) {
+			if (notify_die(DIE_BREAK, "bad break", regs,
+				break_num, TRAP_BRKPT, SIGTRAP) == NOTIFY_STOP)
+				return;
 			die_if_kernel("Bad break", regs, break_num);
+		}
 
 		if (break_num < 0x80000) {
 			sig = SIGILL; code = __ILL_BREAK;

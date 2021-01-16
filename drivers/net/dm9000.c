@@ -70,6 +70,9 @@
 #include <asm/delay.h>
 #include <asm/irq.h>
 #include <asm/io.h>
+#if defined(CONFIG_ARCH_S3C2410)
+#include <asm/arch-s3c2410/regs-mem.h>
+#endif
 
 #include "dm9000.h"
 
@@ -397,6 +400,11 @@ dm9000_probe(struct platform_device *pdev)
 	int i;
 	u32 id_val;
 
+#if defined(CONFIG_ARCH_S3C2410xxx)
+    unsigned int oldval_bwscon;		/* 用来保存BWSCON寄存器的值 */
+    unsigned int oldval_bankcon4;	/* 用来保存S3C2410_BANKCON4寄存器的值 */
+#endif
+
 	/* Init network device */
 	ndev = alloc_etherdev(sizeof (struct board_info));
 	if (!ndev) {
@@ -408,6 +416,17 @@ dm9000_probe(struct platform_device *pdev)
 	SET_NETDEV_DEV(ndev, &pdev->dev);
 
 	PRINTK2("dm9000_probe()");
+
+#if defined(CONFIG_ARCH_S3C2410xxx)
+    /* 设置Bank4: 总线宽度为16, 使能nWAIT。by www.100ask.net */
+    oldval_bwscon = *((volatile unsigned int *)S3C2410_BWSCON);
+    *((volatile unsigned int *)S3C2410_BWSCON) = (oldval_bwscon & ~(3<<16)) \
+        | S3C2410_BWSCON_DW4_16 | S3C2410_BWSCON_WS4 | S3C2410_BWSCON_ST4;
+
+    /* 设置BANK4的时间参数, by www.100ask.net */
+    oldval_bankcon4 = *((volatile unsigned int *)S3C2410_BANKCON4);
+    *((volatile unsigned int *)S3C2410_BANKCON4) = 0x1f7c;
+#endif
 
 	/* setup board info structure */
 	db = (struct board_info *) ndev->priv;
@@ -577,9 +596,19 @@ dm9000_probe(struct platform_device *pdev)
 			ndev->dev_addr[i] = ior(db, i+DM9000_PAR);
 	}
 
-	if (!is_valid_ether_addr(ndev->dev_addr))
+    if (!is_valid_ether_addr(ndev->dev_addr)) {
 		printk("%s: Invalid ethernet MAC address.  Please "
 		       "set using ifconfig\n", ndev->name);
+#if defined(CONFIG_ARCH_S3C2410)
+        printk("Now use the default MAC address: 08:90:90:90:90:90\n");
+        ndev->dev_addr[0] = 0x08;
+        ndev->dev_addr[1] = 0x90;
+        ndev->dev_addr[2] = 0x90;
+        ndev->dev_addr[3] = 0x90;
+        ndev->dev_addr[4] = 0x90;
+        ndev->dev_addr[5] = 0x90;
+#endif
+    }
 
 	platform_set_drvdata(pdev, ndev);
 	ret = register_netdev(ndev);
@@ -596,7 +625,11 @@ dm9000_probe(struct platform_device *pdev)
  release:
  out:
 	printk("%s: not found (%d).\n", CARDNAME, ret);
-
+#if defined(CONFIG_ARCH_S3C2410xxx)
+    /* 恢复寄存器原来的值 */
+    *((volatile unsigned int *)S3C2410_BWSCON) = oldval_bwscon;
+    *((volatile unsigned int *)S3C2410_BANKCON4) = oldval_bankcon4;
+#endif
 	dm9000_release_board(pdev, db);
 	free_netdev(ndev);
 
@@ -614,7 +647,11 @@ dm9000_open(struct net_device *dev)
 
 	PRINTK2("entering dm9000_open\n");
 
+#if defined(CONFIG_ARCH_S3C2410)
+    if (request_irq(dev->irq, &dm9000_interrupt, IRQF_SHARED|IRQF_TRIGGER_RISING, dev->name, dev))
+#else
 	if (request_irq(dev->irq, &dm9000_interrupt, IRQF_SHARED, dev->name, dev))
+#endif
 		return -EAGAIN;
 
 	/* Initialize DM9000 board */
@@ -898,6 +935,8 @@ dm9000_rx(struct net_device *dev)
 
 	/* Check packet ready or not */
 	do {
+ 	ior(db, DM9000_MRRH);
+        ior(db, DM9000_MRRL);        
 		ior(db, DM9000_MRCMDX);	/* Dummy read */
 
 		/* Get most updated data */

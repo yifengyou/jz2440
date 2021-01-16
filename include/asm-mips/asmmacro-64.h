@@ -12,6 +12,7 @@
 #include <asm/regdef.h>
 #include <asm/fpregdef.h>
 #include <asm/mipsregs.h>
+#include <asm/gdb-stub.h>
 
 	.macro	fpu_save_16even thread tmp=t0
 	cfc1	\tmp, fcr31
@@ -53,12 +54,61 @@
 	sdc1	$f31, THREAD_FPR31(\thread)
 	.endm
 
+	.macro	fpu_save_16odd_kgdb stack
+	sdc1	$f1, GDB_FR_FPR1(\stack)
+	sdc1	$f3, GDB_FR_FPR3(\stack)
+	sdc1	$f5, GDB_FR_FPR5(\stack)
+	sdc1	$f7, GDB_FR_FPR7(\stack)
+	sdc1	$f9, GDB_FR_FPR9(\stack)
+	sdc1	$f11, GDB_FR_FPR11(\stack)
+	sdc1	$f13, GDB_FR_FPR13(\stack)
+	sdc1	$f15, GDB_FR_FPR15(\stack)
+	sdc1	$f17, GDB_FR_FPR17(\stack)
+	sdc1	$f19, GDB_FR_FPR19(\stack)
+	sdc1	$f21, GDB_FR_FPR21(\stack)
+	sdc1	$f23, GDB_FR_FPR23(\stack)
+	sdc1	$f25, GDB_FR_FPR25(\stack)
+	sdc1	$f27, GDB_FR_FPR27(\stack)
+	sdc1	$f29, GDB_FR_FPR29(\stack)
+	sdc1	$f31, GDB_FR_FPR31(\stack)
+	.endm
+
+	.macro	fpu_save_16even_kgdb stack tmp = t0
+	cfc1	\tmp,  fcr31
+	sdc1	$f0, GDB_FR_FPR0(\stack)
+	sdc1	$f2, GDB_FR_FPR2(\stack)
+	sdc1	$f4, GDB_FR_FPR4(\stack)
+	sdc1	$f6, GDB_FR_FPR6(\stack)
+	sdc1	$f8, GDB_FR_FPR8(\stack)
+	sdc1	$f10, GDB_FR_FPR10(\stack)
+	sdc1	$f12, GDB_FR_FPR12(\stack)
+	sdc1	$f14, GDB_FR_FPR14(\stack)
+	sdc1	$f16, GDB_FR_FPR16(\stack)
+	sdc1	$f18, GDB_FR_FPR18(\stack)
+	sdc1	$f20, GDB_FR_FPR20(\stack)
+	sdc1	$f22, GDB_FR_FPR22(\stack)
+	sdc1	$f24, GDB_FR_FPR24(\stack)
+	sdc1	$f26, GDB_FR_FPR26(\stack)
+	sdc1	$f28, GDB_FR_FPR28(\stack)
+	sdc1	$f30, GDB_FR_FPR30(\stack)
+	sw	\tmp, GDB_FR_FSR(\stack)
+	.endm
+
 	.macro	fpu_save_double thread status tmp
 	sll	\tmp, \status, 5
 	bgez	\tmp, 2f
 	fpu_save_16odd \thread
 2:
 	fpu_save_16even \thread \tmp
+	.endm
+
+	.macro	fpu_save_double_kgdb stack status tmp
+	sll	\tmp, \status, 5
+	bgez	\tmp, 2f
+	nop
+	fpu_save_16odd_kgdb \stack
+2:
+	fpu_save_16even_kgdb \stack \tmp
 	.endm
 
 	.macro	fpu_restore_16even thread tmp=t0
@@ -101,12 +151,61 @@
 	ldc1	$f31, THREAD_FPR31(\thread)
 	.endm
 
+	.macro	fpu_restore_16even_kgdb stack tmp = t0
+	lw	\tmp, GDB_FR_FSR(\stack)
+	ldc1	$f0,  GDB_FR_FPR0(\stack)
+	ldc1	$f2,  GDB_FR_FPR2(\stack)
+	ldc1	$f4,  GDB_FR_FPR4(\stack)
+	ldc1	$f6,  GDB_FR_FPR6(\stack)
+	ldc1	$f8,  GDB_FR_FPR8(\stack)
+	ldc1	$f10, GDB_FR_FPR10(\stack)
+	ldc1	$f12, GDB_FR_FPR12(\stack)
+	ldc1	$f14, GDB_FR_FPR14(\stack)
+	ldc1	$f16, GDB_FR_FPR16(\stack)
+	ldc1	$f18, GDB_FR_FPR18(\stack)
+	ldc1	$f20, GDB_FR_FPR20(\stack)
+	ldc1	$f22, GDB_FR_FPR22(\stack)
+	ldc1	$f24, GDB_FR_FPR24(\stack)
+	ldc1	$f26, GDB_FR_FPR26(\stack)
+	ldc1	$f28, GDB_FR_FPR28(\stack)
+	ldc1	$f30, GDB_FR_FPR30(\stack)
+	ctc1	\tmp, fcr31
+	.endm
+
+	.macro	fpu_restore_16odd_kgdb stack
+	ldc1	$f1,  GDB_FR_FPR1(\stack)
+	ldc1	$f3,  GDB_FR_FPR3(\stack)
+	ldc1	$f5,  GDB_FR_FPR5(\stack)
+	ldc1	$f7,  GDB_FR_FPR7(\stack)
+	ldc1	$f9,  GDB_FR_FPR9(\stack)
+	ldc1	$f11, GDB_FR_FPR11(\stack)
+	ldc1	$f13, GDB_FR_FPR13(\stack)
+	ldc1	$f15, GDB_FR_FPR15(\stack)
+	ldc1	$f17, GDB_FR_FPR17(\stack)
+	ldc1	$f19, GDB_FR_FPR19(\stack)
+	ldc1	$f21, GDB_FR_FPR21(\stack)
+	ldc1	$f23, GDB_FR_FPR23(\stack)
+	ldc1	$f25, GDB_FR_FPR25(\stack)
+	ldc1	$f27, GDB_FR_FPR27(\stack)
+	ldc1	$f29, GDB_FR_FPR29(\stack)
+	ldc1	$f31, GDB_FR_FPR31(\stack)
+	.endm
+
 	.macro	fpu_restore_double thread status tmp
 	sll	\tmp, \status, 5
 	bgez	\tmp, 1f				# 16 register mode?
 
 	fpu_restore_16odd \thread
 1:	fpu_restore_16even \thread \tmp
+	.endm
+
+	.macro	fpu_restore_double_kgdb stack status tmp
+	sll	\tmp, \status, 5
+	bgez	\tmp, 1f				# 16 register mode?
+	nop
+
+	fpu_restore_16odd_kgdb \stack
+1:	fpu_restore_16even_kgdb \stack \tmp
 	.endm
 
 	.macro	cpu_save_nonscratch thread
