@@ -261,7 +261,83 @@ void do_bootm_linux (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[],
 #ifdef CONFIG_USB_DEVICE
 	{
 		extern void udc_disconnect (void);
-		udc_disconnect ();
+                //udc_disconnect (); // cancled by www.100ask.net
+	}
+#endif
+
+	cleanup_before_linux ();
+
+	theKernel (0, bd->bi_arch_number, bd->bi_boot_params);
+}
+
+void do_bootm_rawLinux (ulong addr)
+{
+	ulong len = 0, checksum;
+	ulong initrd_start, initrd_end;
+	ulong data;
+	void (*theKernel)(int zero, int arch, uint params);
+	image_header_t *hdr = &header;
+	bd_t *bd = gd->bd;
+
+#ifdef CONFIG_CMDLINE_TAG
+	char *commandline = getenv ("bootargs");
+#endif
+
+	theKernel = (void (*)(int, int, uint))addr;
+
+	{
+		/*
+		 * no initrd image
+		 */
+		SHOW_BOOT_PROGRESS (14);
+
+		len = data = 0;
+	}
+
+
+	{
+		initrd_start = 0;
+		initrd_end = 0;
+	}
+
+
+#if defined (CONFIG_SETUP_MEMORY_TAGS) || \
+    defined (CONFIG_CMDLINE_TAG) || \
+    defined (CONFIG_INITRD_TAG) || \
+    defined (CONFIG_SERIAL_TAG) || \
+    defined (CONFIG_REVISION_TAG) || \
+    defined (CONFIG_LCD) || \
+    defined (CONFIG_VFD)
+	setup_start_tag (bd);
+#ifdef CONFIG_SERIAL_TAG
+	setup_serial_tag (&params);
+#endif
+#ifdef CONFIG_REVISION_TAG
+	setup_revision_tag (&params);
+#endif
+#ifdef CONFIG_SETUP_MEMORY_TAGS
+	setup_memory_tags (bd);
+#endif
+#ifdef CONFIG_CMDLINE_TAG
+	setup_commandline_tag (bd, commandline);
+#endif
+#ifdef CONFIG_INITRD_TAG
+	if (initrd_start && initrd_end)
+		setup_initrd_tag (bd, initrd_start, initrd_end);
+#endif
+#if defined (CONFIG_VFD) || defined (CONFIG_LCD)
+	setup_videolfb_tag ((gd_t *) gd);
+#endif
+	setup_end_tag (bd);
+#endif
+
+	/* we assume that the kernel is in place */
+	printf ("\nStarting kernel ...\n\n");
+
+#ifdef CONFIG_USB_DEVICE
+	{
+		extern void udc_disconnect (void);
+                //udc_disconnect (); // cancled by www.100ask.net
 	}
 #endif
 

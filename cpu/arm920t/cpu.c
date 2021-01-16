@@ -88,7 +88,6 @@ static void cp_delay (void)
 #define C1_IC		(1<<12)		/* icache off/on */
 #define C1_HIGH_VECTORS	(1<<13)		/* location of vectors: low/high addresses */
 
-
 int cpu_init (void)
 {
 	/*
@@ -97,6 +96,11 @@ int cpu_init (void)
 #ifdef CONFIG_USE_IRQ
 	IRQ_STACK_START = _armboot_start - CFG_MALLOC_LEN - CFG_GBL_DATA_SIZE - 4;
 	FIQ_STACK_START = IRQ_STACK_START - CONFIG_STACKSIZE_IRQ;
+    FREE_RAM_END = FIQ_STACK_START - CONFIG_STACKSIZE_FIQ - CONFIG_STACKSIZE;
+    FREE_RAM_SIZE = FREE_RAM_END - PHYS_SDRAM_1;
+#else    
+    FREE_RAM_END = _armboot_start - CFG_MALLOC_LEN - CFG_GBL_DATA_SIZE - 4 - CONFIG_STACKSIZE;
+    FREE_RAM_SIZE = FREE_RAM_END - PHYS_SDRAM_1;
 #endif
 	return 0;
 }

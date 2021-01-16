@@ -35,6 +35,9 @@ extern ulong _bss_start;	/* code + data end == BSS start */
 extern ulong _bss_end;		/* BSS end */
 extern ulong IRQ_STACK_START;	/* top of IRQ stack */
 extern ulong FIQ_STACK_START;	/* top of FIQ stack */
+extern ulong FREE_RAM_END;	/* top of free ram */
+extern ulong FREE_RAM_SIZE;	/* size of free ram */
+extern ulong PreLoadedONRAM;
 
 /* cpu/.../cpu.c */
 int	cpu_init(void);

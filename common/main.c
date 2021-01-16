@@ -40,9 +40,9 @@
 
 #include <post.h>
 
-#ifdef CONFIG_SILENT_CONSOLE
+//#ifdef CONFIG_SILENT_CONSOLE
 DECLARE_GLOBAL_DATA_PTR;
-#endif
+//#endif
 
 #if defined(CONFIG_BOOT_RETRY_TIME) && defined(CONFIG_RESET_TO_RETRY)
 extern int do_reset (cmd_tbl_t *cmdtp, int flag, int argc, char *argv[]);		/* for do_reset() prototype */
@@ -257,14 +257,20 @@ static __inline__ int abortboot(int bootdelay)
 		/* delay 100 * 10ms */
 		for (i=0; !abort && i<100; ++i) {
 			if (tstc()) {	/* we got a key press	*/
+# ifdef CONFIG_MENUKEY
 				abort  = 1;	/* don't auto boot	*/
 				bootdelay = 0;	/* no more delay	*/
-# ifdef CONFIG_MENUKEY
 				menukey = getc();
-# else
-				(void) getc();  /* consume input	*/
-# endif
 				break;
+# else
+				/* consume input	*/
+				if (getc() == ' ') {
+					abort  = 1; /* don't auto boot	*/
+					bootdelay = 0;	/* no more delay	*/
+					break;
+				}
+# endif
+
 			}
 			udelay (10000);
 		}
@@ -363,6 +369,18 @@ void main_loop (void)
 	install_auto_complete();
 #endif
 
+#ifdef CONFIG_JFFS2_CMDLINE
+    extern int mtdparts_init(void);
+    if (!getenv("mtdparts"))
+    {
+        run_command("mtdparts default", 0);
+    }
+    else
+    {
+        mtdparts_init();
+    }
+#endif
+
 #ifdef CONFIG_PREBOOT
 	if ((p = getenv ("preboot")) != NULL) {
 # ifdef CONFIG_AUTOBOOT_KEYED
@@ -392,6 +410,17 @@ void main_loop (void)
 	init_cmd_timeout ();
 # endif	/* CONFIG_BOOT_RETRY_TIME */
 
+	if (PreLoadedONRAM)	{
+		printf("Use these steps to program the image to flash:\n");
+		printf("1. In OpenOCD\n");
+		printf("   Run the 'halt' command to halt u-boot\n");
+		printf("   Run the 'load_image <file> <address>' command to load file to SDRAM\n");
+		printf("   Run the 'resume' command to resume u-boot\n");
+		printf("2. In u-boot, use the flash commands to program the image to flash\n");
+		printf("Or, use the tftp or nfs command to download file, and then program the flash.\n");
+		goto PROMPT;
+	}
+
 #ifdef CONFIG_BOOTCOUNT_LIMIT
 	if (bootlimit && (bootcount > bootlimit)) {
 		printf ("Warning: Bootlimit (%u) exceeded. Using altbootcmd.\n",
@@ -410,7 +439,10 @@ void main_loop (void)
 # endif
 
 # ifndef CFG_HUSH_PARSER
-		run_command (s, 0);
+        {
+            printf("Booting Linux ...\n");            
+    	    run_command (s, 0);
+        }
 # else
 		parse_string_outer(s, FLAG_PARSE_SEMICOLON |
 				    FLAG_EXIT_FROM_LOOP);
@@ -442,10 +474,12 @@ void main_loop (void)
 	    video_banner();
 	}
 #endif
-
+    eth_init(gd->bd);
+    run_command("menu", 0);
 	/*
 	 * Main Loop for Monitor Command Processing
 	 */
+PROMPT:
 #ifdef CFG_HUSH_PARSER
 	parse_file_outer();
 	/* This point is never reached */

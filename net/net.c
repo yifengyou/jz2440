@@ -301,7 +301,7 @@ NetLoop(proto_t protocol)
 		NetArpWaitTxPacketSize = 0;
 	}
 
-	eth_halt();
+	//eth_halt();
 #ifdef CONFIG_NET_MULTI
 	eth_set_current();
 #endif
@@ -547,7 +547,7 @@ restart:
 				sprintf(buf, "%lX", (unsigned long)load_addr);
 				setenv("fileaddr", buf);
 			}
-			eth_halt();
+			//eth_halt();
 			return NetBootFileXferSize;
 
 		case NETLOOP_FAIL:

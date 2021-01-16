@@ -268,10 +268,9 @@ void env_relocate_spec (void)
 void env_relocate_spec (void)
 {
 #if !defined(ENV_IS_EMBEDDED)
-	ulong total;
+	ulong total = CFG_ENV_SIZE;
 	int ret;
 
-	total = CFG_ENV_SIZE;
 	ret = nand_read(&nand_info[0], CFG_ENV_OFFSET, &total, (u_char*)env_ptr);
   	if (ret || total != CFG_ENV_SIZE)
 		return use_default();

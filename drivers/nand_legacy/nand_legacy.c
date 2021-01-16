@@ -60,6 +60,7 @@ void archflashwp(void *archdata, int wp);
 #define NANDRW_WRITE	0x00
 #define NANDRW_JFFS2	0x02
 #define NANDRW_JFFS2_SKIP	0x04
+#define NANDRW_YAFFS	0x08    /* to write yaffs image, www.100ask.net */
 
 
 /*
@@ -185,6 +186,31 @@ int nand_legacy_rw (struct nand_chip* nand, int cmd,
 	 */
 	unsigned long eblk = ~0;	/* force mismatch on first pass */
 	unsigned long erasesize = nand->erasesize;
+    int bfirstyaffsblk = 1;
+    int page;
+    unsigned long badblk=0, prgmblk=0;
+    unsigned long badblks=0, prgmblks = 0;
+    unsigned long allblks;
+
+    allblks = (erasesize/nand->oobblock)*(nand->oobblock+nand->oobsize);
+    allblks = (len + allblks - 1) / allblks;
+    
+	if ((cmd & NANDRW_YAFFS) && (len % (nand->oobblock + nand->oobsize))) {
+        printf("Length of the yaffs image should be times of (%d +%d), now it is %d\n", nand->oobblock, nand->oobsize, len);
+        return -1;
+    }
+
+    if ((cmd & NANDRW_YAFFS) && (start % erasesize)) {
+        printf("Start address of the flash should be %d align\n", erasesize);
+        return -1;
+    }
+
+	if (cmd & (NANDRW_WRITE | NANDRW_YAFFS)) {
+        printf("Flash params: oobblock = %d, oobsize = %d, erasesize = %d\n", nand->oobblock, nand->oobsize, nand->erasesize);
+    	printf("Programming NAND with yaffs image, length = %d\n", len);
+        printf(" Block Programming(addr/count) --- Block bad(addr/count) --- Block programed/All(%%)\n");
+        printf("------------------------------------------------------------------------------------\n");
+	}
 
 	while (len) {
 		if ((start & (-erasesize)) != eblk) {
@@ -193,6 +219,8 @@ int nand_legacy_rw (struct nand_chip* nand, int cmd,
 			 */
 			eblk = start & (-erasesize); /* start of block */
 			if (check_block(nand, eblk)) {
+                badblk = eblk;
+                badblks++;
 				if (cmd == (NANDRW_READ | NANDRW_JFFS2)) {
 					while (len > 0 &&
 					       start - eblk < erasesize) {
@@ -209,6 +237,12 @@ int nand_legacy_rw (struct nand_chip* nand, int cmd,
 					/* skip bad block */
 					start += erasesize;
 					continue;
+				} else if (cmd == (NANDRW_WRITE | NANDRW_YAFFS)) {
+				    /* by www.100ask.net */
+                    printf("       0x%08x/%05d               0x%08x/%05d          %05d/%05d=%02d%%\r", prgmblk, prgmblks, badblk, badblks, prgmblks, allblks, prgmblks*100/allblks);
+					/* skip bad block */
+					start += erasesize;
+					continue;
 				} else {
 					ret = 1;
 					break;
@@ -221,7 +255,33 @@ int nand_legacy_rw (struct nand_chip* nand, int cmd,
 		if((start != ROUND_DOWN(start, 0x200)) || (len < 0x200))
 			printf("Warning block writes should be at least 512 bytes and start on a 512 byte boundry\n");
 
-		if (cmd & NANDRW_READ) {
+        /* for yaffs, by www.100ask.net */
+		if (cmd & (NANDRW_WRITE | NANDRW_YAFFS)) {
+			/* Do some programming, but not in the first block */			
+            if (!bfirstyaffsblk) {
+                prgmblk = start;
+                prgmblks++;
+                printf("       0x%08x/%05d               0x%08x/%05d          %05d/%05d=%02d%%\r", prgmblk, prgmblks, badblk, badblks, prgmblks, allblks, prgmblks*100/allblks);
+                for (page = 0; (page < erasesize/nand->oobblock) && (len - page*(nand->oobblock+nand->oobsize) > 0); page++) {
+        			ret = nand_write_ecc(nand, start+page*nand->oobblock,
+        					    nand->oobblock, (size_t *)&n,
+        					    (u_char*)buf+page*(nand->oobblock+nand->oobsize), (u_char *)0); /* without ecc */
+                    if (!ret) 
+                        ret = nand_write_oob(nand, start+page*nand->oobblock,
+    						     nand->oobsize, (size_t *)&n,
+    						     (u_char*)buf+page*(nand->oobblock+nand->oobsize)+nand->oobblock);
+                    if (ret)
+                        break;
+                }
+                n = page * (nand->oobblock+nand->oobsize);
+            } else {
+                bfirstyaffsblk = 0;
+                n = 0;
+                start += erasesize;     /* skip first block */
+                ret = 0;
+                page = 0;
+            }
+		} else if (cmd & NANDRW_READ) {
 			ret = nand_read_ecc(nand, start,
 					   min(len, eblk + erasesize - start),
 					   (size_t *)&n, (u_char*)buf, (u_char *)eccbuf);
@@ -234,14 +294,18 @@ int nand_legacy_rw (struct nand_chip* nand, int cmd,
 		if (ret)
 			break;
 
-		start  += n;
+		if (cmd & (NANDRW_WRITE | NANDRW_YAFFS))
+    		start  += page * nand->oobblock;
+        else
+    		start  += n;
+        
 		buf   += n;
 		total += n;
 		len   -= n;
 	}
 	if (retlen)
 		*retlen = total;
-
+    printf("\n");
 	return ret;
 }
 
@@ -759,6 +823,7 @@ readdata:
 
 /*
  *	Nand_page_program function is used for write and writev !
+ *  Change By www.100ask.net, if ecc_code is null, write without ECC
  */
 static int nand_write_page (struct nand_chip *nand,
 			    int page, int col, int last, u_char * ecc_code)
@@ -766,6 +831,7 @@ static int nand_write_page (struct nand_chip *nand,
 
 	int i;
 	unsigned long nandptr = nand->IO_ADDR;
+    int writecnt;
 
 #ifdef CONFIG_MTD_NAND_ECC
 #ifdef CONFIG_MTD_NAND_VERIFY_WRITE
@@ -778,8 +844,9 @@ static int nand_write_page (struct nand_chip *nand,
 
 #ifdef CONFIG_MTD_NAND_ECC
 	/* Zero out the ECC array */
-	for (i = 0; i < 6; i++)
-		ecc_code[i] = 0x00;
+    if (ecc_code)   /* www.100ask.net */
+    	for (i = 0; i < 6; i++)
+    		ecc_code[i] = 0x00;
 
 	/* Read back previous written data, if col > 0 */
 	if (col) {
@@ -807,7 +874,9 @@ static int nand_write_page (struct nand_chip *nand,
 	}
 
 	/* Calculate and write the ECC if we have enough data */
-	if ((col < nand->eccsize) && (last >= nand->eccsize)) {
+	//if ((col < nand->eccsize) && (last >= nand->eccsize)) {
+    /* if ecc_code is null, write without ecc, www.100ask.net */
+	if (ecc_code && (col < nand->eccsize) && (last >= nand->eccsize)) {
 		nand_calculate_ecc (&nand->data_buf[0], &(ecc_code[0]));
 		for (i = 0; i < 3; i++) {
 			nand->data_buf[(nand->oobblock +
@@ -820,7 +889,9 @@ static int nand_write_page (struct nand_chip *nand,
 	}
 
 	/* Calculate and write the second ECC if we have enough data */
-	if ((nand->oobblock == 512) && (last == nand->oobblock)) {
+	//if ((nand->oobblock == 512) && (last == nand->oobblock)) {
+    /* if ecc_code is null, write without ecc, www.100ask.net */
+	if (ecc_code && (nand->oobblock == 512) && (last == nand->oobblock)) {
 		nand_calculate_ecc (&nand->data_buf[256], &(ecc_code[3]));
 		for (i = 3; i < 6; i++) {
 			nand->data_buf[(nand->oobblock +
@@ -851,15 +922,21 @@ static int nand_write_page (struct nand_chip *nand,
 			      (page << nand->page_shift) + col);
 	}
 
+    /* if ecc_code is null, write without ecc, www.100ask.net */
+    if (ecc_code)
+        writecnt = nand->oobblock + nand->oobsize;
+    else
+        writecnt = nand->oobblock;
+
 	/* Write out complete page of data */
 	if (nand->bus16) {
-		for (i = 0; i < (nand->oobblock + nand->oobsize); i += 2) {
+		for (i = 0; i < writecnt; i += 2) {
 			WRITE_NAND (nand->data_buf[i] +
 				    (nand->data_buf[i + 1] << 8),
 				    nand->IO_ADDR);
 		}
 	} else {
-		for (i = 0; i < (nand->oobblock + nand->oobsize); i++)
+		for (i = 0; i < writecnt; i++)
 			WRITE_NAND (nand->data_buf[i], nand->IO_ADDR);
 	}
 
@@ -933,35 +1010,38 @@ static int nand_write_page (struct nand_chip *nand,
 	 * We also want to check that the ECC bytes wrote
 	 * correctly for the same reasons stated above.
 	 */
-	NanD_Command (nand, NAND_CMD_READOOB);
-	if (nand->bus16) {
-		NanD_Address (nand, ADDR_COLUMN_PAGE,
-			      (page << nand->page_shift) + (col >> 1));
-	} else {
-		NanD_Address (nand, ADDR_COLUMN_PAGE,
-			      (page << nand->page_shift) + col);
-	}
-	if (nand->bus16) {
-		for (i = 0; i < nand->oobsize; i += 2) {
-			u16 val;
+    /* if ecc_code is null, write without ecc, www.100ask.net */
+	if (ecc_code) {
+    	NanD_Command (nand, NAND_CMD_READOOB);
+    	if (nand->bus16) {
+    		NanD_Address (nand, ADDR_COLUMN_PAGE,
+    			      (page << nand->page_shift) + (col >> 1));
+    	} else {
+    		NanD_Address (nand, ADDR_COLUMN_PAGE,
+    			      (page << nand->page_shift) + col);
+    	}
+    	if (nand->bus16) {
+    		for (i = 0; i < nand->oobsize; i += 2) {
+    			u16 val;
 
-			val = READ_NAND (nand->IO_ADDR);
-			nand->data_buf[i] = val & 0xff;
-			nand->data_buf[i + 1] = val >> 8;
-		}
-	} else {
-		for (i = 0; i < nand->oobsize; i++) {
-			nand->data_buf[i] = READ_NAND (nand->IO_ADDR);
-		}
-	}
-	for (i = 0; i < ecc_bytes; i++) {
-		if ((nand->data_buf[(oob_config.ecc_pos[i])] != ecc_code[i]) && ecc_code[i]) {
-			printf ("%s: Failed ECC write "
-				"verify, page 0x%08x, "
-				"%6i bytes were succesful\n",
-				__FUNCTION__, page, i);
-			return -1;
-		}
+    			val = READ_NAND (nand->IO_ADDR);
+    			nand->data_buf[i] = val & 0xff;
+    			nand->data_buf[i + 1] = val >> 8;
+    		}
+    	} else {
+    		for (i = 0; i < nand->oobsize; i++) {
+    			nand->data_buf[i] = READ_NAND (nand->IO_ADDR);
+    		}
+    	}
+    	for (i = 0; i < ecc_bytes; i++) {
+    		if ((nand->data_buf[(oob_config.ecc_pos[i])] != ecc_code[i]) && ecc_code[i]) {
+    			printf ("%s: Failed ECC write "
+    				"verify, page 0x%08x, "
+    				"%6i bytes were succesful\n",
+    				__FUNCTION__, page, i);
+    			return -1;
+    		}
+    	}
 	}
 #endif	/* CONFIG_MTD_NAND_ECC */
 #endif	/* CONFIG_MTD_NAND_VERIFY_WRITE */
@@ -1053,6 +1133,7 @@ out:
 	return ret;
 }
 
+
 /* read from the 16 bytes of oob data that correspond to a 512 byte
  * page or 2 256-byte pages.
  */
@@ -1132,6 +1213,17 @@ int nand_write_oob(struct nand_chip* nand, size_t ofs, size_t len,
 
 	/* issue the Read2 command to set the pointer to the Spare Data Area. */
 	NanD_Command(nand, NAND_CMD_READOOB);
+
+/* bug fixed by www.100ask.net
+ * write oob sequence: 
+ *  1. NAND_CMD_READOOB
+ *  2. NAND_CMD_SEQIN
+ *  3. Address
+ *  4. Data
+ *  5. NAND_CMD_PAGEPROG
+ *  6. NAND_CMD_STATUS
+ */
+#if 0   
 	if (nand->bus16) {
  		NanD_Address(nand, ADDR_COLUMN_PAGE,
 			     ((ofs >> nand->page_shift) << nand->page_shift) +
@@ -1139,7 +1231,7 @@ int nand_write_oob(struct nand_chip* nand, size_t ofs, size_t len,
 	} else {
  		NanD_Address(nand, ADDR_COLUMN_PAGE, ofs);
 	}
-
+#endif
 	/* update address for 2M x 8bit devices. OOB starts on the second */
 	/* page to maintain compatibility with nand_read_ecc. */
 	if (nand->page256) {

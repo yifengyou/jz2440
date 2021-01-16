@@ -202,6 +202,7 @@ int usb_kbd_deregister(void);
 
 #endif
 /* routines */
+void Port_Init(void);
 int usb_init(void); /* initialize the USB Controller */
 int usb_stop(void); /* stop the USB Controller */
 

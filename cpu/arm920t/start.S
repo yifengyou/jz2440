@@ -36,6 +36,19 @@
  *
  *************************************************************************
  */
+#define GSTATUS2       (0x560000B4)
+#define GSTATUS3       (0x560000B8)
+#define GSTATUS4       (0x560000BC)
+
+#define REFRESH        (0x48000024)
+#define MISCCR         (0x56000080)
+
+#define LOCKTIME	0x4C000000	/* R/W, PLL lock time count register */
+#define MPLLCON		0x4C000004	/* R/W, MPLL configuration register */
+#define UPLLCON		0x4C000008	/* R/W, UPLL configuration register */
+#define CLKCON		0x4C00000C	/* R/W, Clock generator control reg. */
+#define CLKSLOW		0x4C000010	/* R/W, Slow clock control register */
+#define CLKDIVN		0x4C000014	/* R/W, Clock divider control */
 
 
 .globl _start
@@ -90,6 +103,18 @@ _bss_start:
 _bss_end:
 	.word _end
 
+.globl FREE_RAM_END
+FREE_RAM_END:
+	.word	0x0badc0de
+
+.globl FREE_RAM_SIZE
+FREE_RAM_SIZE:
+	.word	0x0badc0de
+
+.globl PreLoadedONRAM
+PreLoadedONRAM:
+	.word	0
+
 #ifdef CONFIG_USE_IRQ
 /* IRQ stack memory (calculated at run-time) */
 .globl IRQ_STACK_START
@@ -123,6 +148,7 @@ reset:
 # define CLKDIVN	0x14800014	/* clock divisor register */
 #elif defined(CONFIG_S3C2410)
 # define pWTCON		0x53000000
+# define INTMOD     0X4A000004
 # define INTMSK		0x4A000008	/* Interupt-Controller base addresses */
 # define INTSUBMSK	0x4A00001C
 # define CLKDIVN	0x4C000014	/* clock divisor register */
@@ -145,31 +171,113 @@ reset:
 	str	r1, [r0]
 # endif
 
+#if 0
 	/* FCLK:HCLK:PCLK = 1:2:4 */
 	/* default FCLK is 120 MHz ! */
 	ldr	r0, =CLKDIVN
 	mov	r1, #3
 	str	r1, [r0]
+#endif
 #endif	/* CONFIG_S3C2400 || CONFIG_S3C2410 */
+
+#ifndef CONFIG_SKIP_LOWLEVEL_INIT
+#if 0
+		/* 这些代码会使用SP,在NAND启动时会破坏片内内存的部分代码
+         * 导致NAND启动时无法使用休眠-唤醒功能
+         */
+		/* 设置SP指向片内内存 */
+		ldr sp, =4092
+		ldr r0, =0x12345678
+		str r0, [sp]
+		ldr r1, [sp]
+		cmp r0, r1
+		ldrne sp, =0x40000000+4096
+		bl clock_init
+#else
+	/* 设置时钟, 使用汇编 */
+#define S3C2440_MPLL_400MHZ     ((0x5c<<12)|(0x01<<4)|(0x01))
+#define S3C2440_UPLL_48MHZ      ((0x38<<12)|(0x02<<4)|(0x02))
+#define S3C2440_CLKDIV          (0x05) // | (1<<3))    /* FCLK:HCLK:PCLK = 1:4:8, UCLK = UPLL/2 */
+
+	ldr r1, =CLKDIVN
+	mov r2, #S3C2440_CLKDIV
+	str r2, [r1]
+
+	mrc p15, 0, r1, c1, c0, 0		// read ctrl register 
+	orr r1, r1, #0xc0000000 		// Asynchronous	
+	mcr p15, 0, r1, c1, c0, 0		// write ctrl register
+
+    ldr r0,=LOCKTIME
+    ldr r1,=0xffffff
+    str r1,[r0]
+    // delay
+    mov     r0, #0x200
+1:  subs    r0, r0, #1
+    bne     1b
+
+    // Configure MPLL
+    ldr r0,=MPLLCON          
+    ldr r1,=S3C2440_MPLL_400MHZ
+    str r1,[r0]
+    // delay
+    mov     r0, #0x200
+1:  subs    r0, r0, #1
+    bne     1b
+
+    //Configure UPLL
+    ldr     r0, =UPLLCON          
+    ldr     r1, =S3C2440_UPLL_48MHZ
+    str     r1, [r0]
+    // delay
+    mov     r0, #0x200
+1:  subs    r0, r0, #1
+    bne     1b
+
+
+#endif
+#endif    
+
+	/* 2. 根据 GSTATUS2[1]判断是复位还是唤醒 */	
+	ldr r0, =GSTATUS2
+	ldr r1, [r0]
+	tst r1, #(1<<1)  /* r1 & (1<<1) */
+	bne wake_up	
 
 	/*
 	 * we do sys-critical inits only at reboot,
 	 * not when booting from ram!
 	 */
 #ifndef CONFIG_SKIP_LOWLEVEL_INIT
-	bl	cpu_init_crit
+	adr	r0, _start		/* r0 <- current position of code   */
+	ldr	r1, _TEXT_BASE		/* test if we run from flash or RAM */
+	cmp     r0, r1                  /* don't reloc during debug         */
+	blne	cpu_init_crit
 #endif
+
+	/* Set up the stack						    */
+stack_setup:
+	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */
+	sub	r0, r0, #CFG_MALLOC_LEN	/* malloc area                      */
+	sub	r0, r0, #CFG_GBL_DATA_SIZE /* bdinfo                        */
+
+#ifdef CONFIG_USE_IRQ
+	sub	r0, r0, #(CONFIG_STACKSIZE_IRQ+CONFIG_STACKSIZE_FIQ)
+#endif
+	sub	sp, r0, #12		/* leave 3 words for abort-stack    */
 
 #ifndef CONFIG_SKIP_RELOCATE_UBOOT
 relocate:				/* relocate U-Boot to RAM	    */
 	adr	r0, _start		/* r0 <- current position of code   */
 	ldr	r1, _TEXT_BASE		/* test if we run from flash or RAM */
 	cmp     r0, r1                  /* don't reloc during debug         */
-	beq     stack_setup
-
+	beq     clear_bss
+	
 	ldr	r2, _armboot_start
 	ldr	r3, _bss_start
 	sub	r2, r3, r2		/* r2 <- size of armboot            */
+#if 1
+	bl  CopyCode2Ram	/* r0: source, r1: dest, r2: size */
+#else
 	add	r2, r0, r2		/* r2 <- source end address         */
 
 copy_loop:
@@ -177,17 +285,8 @@ copy_loop:
 	stmia	r1!, {r3-r10}		/* copy to   target address [r1]    */
 	cmp	r0, r2			/* until source end addreee [r2]    */
 	ble	copy_loop
-#endif	/* CONFIG_SKIP_RELOCATE_UBOOT */
-
-	/* Set up the stack						    */
-stack_setup:
-	ldr	r0, _TEXT_BASE		/* upper 128 KiB: relocated uboot   */
-	sub	r0, r0, #CFG_MALLOC_LEN	/* malloc area                      */
-	sub	r0, r0, #CFG_GBL_DATA_SIZE /* bdinfo                        */
-#ifdef CONFIG_USE_IRQ
-	sub	r0, r0, #(CONFIG_STACKSIZE_IRQ+CONFIG_STACKSIZE_FIQ)
 #endif
-	sub	sp, r0, #12		/* leave 3 words for abort-stack    */
+#endif	/* CONFIG_SKIP_RELOCATE_UBOOT */
 
 clear_bss:
 	ldr	r0, _bss_start		/* find start of bss segment        */
@@ -198,6 +297,15 @@ clbss_l:str	r2, [r0]		/* clear loop...                    */
 	add	r0, r0, #4
 	cmp	r0, r1
 	ble	clbss_l
+
+SetLoadFlag:
+	/* Set a global flag, PreLoadedONRAM */
+	adr	r0, _start		/* r0 <- current position of code   */
+	ldr	r1, _TEXT_BASE		/* test if we run from flash or RAM */
+	cmp     r0, r1                  /* don't reloc during debug         */
+	ldr r2, =PreLoadedONRAM
+	mov r3, #1
+	streq r3, [r2]
 
 #if 0
 	/* try doing this stuff after the relocation */
@@ -224,6 +332,29 @@ clbss_l:str	r2, [r0]		/* clear loop...                    */
 
 _start_armboot:	.word start_armboot
 
+/* 1. 按下按键 */
+wake_up:
+	str r1, [r0]  /* clear GSTATUS2 */
+	/* 3. 设置 MISCCR[19:17]=000b, 以释放SDRAM信号 */
+	ldr r0, =MISCCR
+	ldr r1, [r0]
+	bic r1, r1, #(7<<17)
+	str r1, [r0]
+		
+	/* 4. 配置s3c2440的memory controller */
+	bl	cpu_init_crit
+	
+	/* 5. 等待SDRAM退出self-refresh mode */
+	mov r0, #1000
+1:	subs r0, r0, #1
+	cmp r0, #0
+	bne 1b
+	
+	/* 6. 根据GSTATUS[3:4]的值来运行休眠前的函数 */
+	ldr r0, =GSTATUS3
+	ldr r1, [r0]
+	mov pc, r1
+	
 
 /*
  *************************************************************************
@@ -400,14 +531,88 @@ not_used:
 	bad_save_user_regs
 	bl 	do_not_used
 
+@ thisway.diy, 2006.06.24
+.globl Launch
+    .align	4
+Launch:    
+    mov r7, r0
+    @ diable interrupt
+	@ disable watch dog timer
+	mov	r1, #0x53000000
+	mov	r2, #0x0
+	str	r2, [r1]
+
+    ldr r1,=INTMSK
+    ldr r2,=0xffffffff  @ all interrupt disable
+    str r2,[r1]
+
+    ldr r1,=INTSUBMSK
+    ldr r2,=0x7ff       @ all sub interrupt disable
+    str r2,[r1]
+
+    ldr     r1, = INTMOD
+    mov r2, #0x0        @ set all interrupt as IRQ (not FIQ)
+    str     r2, [r1]
+
+    @ 
+	mov	ip, #0
+	mcr	p15, 0, ip, c13, c0, 0      @	/* zero PID */
+	mcr	p15, 0, ip, c7, c7, 0       @	/* invalidate I,D caches */
+	mcr	p15, 0, ip, c7, c10, 4      @	/* drain write buffer */
+	mcr	p15, 0, ip, c8, c7, 0       @	/* invalidate I,D TLBs */
+	mrc	p15, 0, ip, c1, c0, 0       @	/* get control register */
+	bic	ip, ip, #0x0001             @	/* disable MMU */
+	mcr	p15, 0, ip, c1, c0, 0       @	/* write control register */
+
+    @ MMU_EnableICache
+    @mrc p15,0,r1,c1,c0,0
+    @orr r1,r1,#(1<<12)
+    @mcr p15,0,r1,c1,c0,0
+
+    @ clear SDRAM: the end of free mem(has wince on it now) to the end of SDRAM
+    ldr     r3, FREE_RAM_END
+    ldr     r4, =PHYS_SDRAM_1+PHYS_SDRAM_1_SIZE    @ must clear all the memory unused to zero
+    mov     r5, #0
+
+    ldr     r1, _armboot_start
+    ldr     r2, =On_Steppingstone
+    sub     r2, r2, r1
+    mov     pc, r2
+On_Steppingstone:
+2:  stmia   r3!, {r5}
+    cmp     r3, r4
+    bne     2b
+
+    @ set sp = 0 on sys mode
+    mov sp, #0
+
+    @ add by thisway.diy 2006.06.26, switch to SVC mode
+	msr	cpsr_c,	#0xdf	@ set the I-bit = 1, diable the IRQ interrupt
+	msr	cpsr_c,	#0xd3	@ set the I-bit = 1, diable the IRQ interrupt
+    ldr sp, =0x31ff5800	
+    
+    nop
+	nop
+    nop
+	nop
+
+	mov     pc, r7  @ Jump to PhysicalAddress
+	nop
+    mov pc, lr
+
 #ifdef CONFIG_USE_IRQ
 
 	.align	5
 irq:
-	get_irq_stack
-	irq_save_user_regs
-	bl 	do_irq
-	irq_restore_user_regs
+/* add by www.100ask.net to use IRQ for USB and DMA */
+	sub	lr, lr, #4			        @ the return address
+	ldr	sp, IRQ_STACK_START	        @ the stack for irq
+	stmdb	sp!, 	{ r0-r12,lr }	@ save registers
+	
+	ldr	lr,	=int_return		        @ set the return addr
+	ldr	pc, =IRQ_Handle		        @ call the isr
+int_return:
+	ldmia	sp!, 	{ r0-r12,pc }^	@ return from interrupt
 
 	.align	5
 fiq:
