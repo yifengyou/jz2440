@@ -2,6 +2,7 @@
 
 set -e
 patch -p1 < ./linux-2.6.22.6_jz2440_v2v3.patch
+#patch -R -p1 < ./linux-2.6.22.6_jz2440_v2v3.patch
 echo "patch done"
 
 cp config_ok .config
