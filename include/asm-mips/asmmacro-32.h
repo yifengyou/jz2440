@@ -11,6 +11,28 @@
 #include <asm/regdef.h>
 #include <asm/fpregdef.h>
 #include <asm/mipsregs.h>
+#include <asm/gdb-stub.h>
+
+	.macro	fpu_save_double_kgdb stack status tmp1 = t0
+	cfc1	\tmp1,  fcr31
+	sdc1	$f0, GDB_FR_FPR0(\stack)
+	sdc1	$f2, GDB_FR_FPR2(\stack)
+	sdc1	$f4, GDB_FR_FPR4(\stack)
+	sdc1	$f6, GDB_FR_FPR6(\stack)
+	sdc1	$f8, GDB_FR_FPR8(\stack)
+	sdc1	$f10, GDB_FR_FPR10(\stack)
+	sdc1	$f12, GDB_FR_FPR12(\stack)
+	sdc1	$f14, GDB_FR_FPR14(\stack)
+	sdc1	$f16, GDB_FR_FPR16(\stack)
+	sdc1	$f18, GDB_FR_FPR18(\stack)
+	sdc1	$f20, GDB_FR_FPR20(\stack)
+	sdc1	$f22, GDB_FR_FPR22(\stack)
+	sdc1	$f24, GDB_FR_FPR24(\stack)
+	sdc1	$f26, GDB_FR_FPR26(\stack)
+	sdc1	$f28, GDB_FR_FPR28(\stack)
+	sdc1	$f30, GDB_FR_FPR30(\stack)
+	sw	\tmp1, GDB_FR_FSR(\stack)
+	.endm
 
 	.macro	fpu_save_double thread status tmp1=t0
 	cfc1	\tmp1,  fcr31
@@ -88,6 +110,27 @@
 	ldc1	$f26, THREAD_FPR26(\thread)
 	ldc1	$f28, THREAD_FPR28(\thread)
 	ldc1	$f30, THREAD_FPR30(\thread)
+	ctc1	\tmp, fcr31
+	.endm
+
+	.macro	fpu_restore_double_kgdb stack status tmp = t0
+	lw	\tmp, GDB_FR_FSR(\stack)
+	ldc1	$f0,  GDB_FR_FPR0(\stack)
+	ldc1	$f2,  GDB_FR_FPR2(\stack)
+	ldc1	$f4,  GDB_FR_FPR4(\stack)
+	ldc1	$f6,  GDB_FR_FPR6(\stack)
+	ldc1	$f8,  GDB_FR_FPR8(\stack)
+	ldc1	$f10, GDB_FR_FPR10(\stack)
+	ldc1	$f12, GDB_FR_FPR12(\stack)
+	ldc1	$f14, GDB_FR_FPR14(\stack)
+	ldc1	$f16, GDB_FR_FPR16(\stack)
+	ldc1	$f18, GDB_FR_FPR18(\stack)
+	ldc1	$f20, GDB_FR_FPR20(\stack)
+	ldc1	$f22, GDB_FR_FPR22(\stack)
+	ldc1	$f24, GDB_FR_FPR24(\stack)
+	ldc1	$f26, GDB_FR_FPR26(\stack)
+	ldc1	$f28, GDB_FR_FPR28(\stack)
+	ldc1	$f30, GDB_FR_FPR30(\stack)
 	ctc1	\tmp, fcr31
 	.endm
 

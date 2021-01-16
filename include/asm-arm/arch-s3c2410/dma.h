@@ -343,6 +343,13 @@ extern int s3c2410_dma_set_buffdone_fn(dmach_t, s3c2410_dma_cbfn_t rtn);
 
 #define S3C2410_DCON_INTREQ     (1<<29)
 
+// ghcstop add
+#define S3C2410_DCON_TSZUNIT    (0<<28)
+#define S3C2410_DCON_TSZBURST   (1<<28)
+#define S3C2410_DCON_SSERVE     (0<<27) // single serve mode
+#define S3C2410_DCON_WSERVE     (1<<27) // whole serve mode
+
+
 #define S3C2410_DCON_CH0_XDREQ0	(0<<24)
 #define S3C2410_DCON_CH0_UART0	(1<<24)
 #define S3C2410_DCON_CH0_SDI	(2<<24)
@@ -393,6 +400,17 @@ extern int s3c2410_dma_set_buffdone_fn(dmach_t, s3c2410_dma_cbfn_t rtn);
 #define S3C2440_DCON_CH3_MICIN	(5<<24)
 #define S3C2440_DCON_CH3_PCMOUT	(6<<24)
 #endif
+
+// ghcstop add ===================================
+#define ON_AHB			(0<<1)
+#define ON_APB			(1<<1)
+#define ADDR_INC		(0<<0)
+#define ADDR_FIX		(1<<0)
+
+// 2440 only
+#define BUF_ON_MEM		(ON_AHB | ADDR_INC)
+#define BUF_ON_APB		(ON_APB	| ADDR_FIX)
+// ghcstop add end ===============================
 
 #ifdef CONFIG_CPU_S3C2412
 

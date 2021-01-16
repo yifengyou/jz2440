@@ -23,4 +23,3 @@ obj-y				:= reset.o display.o init.o memory.o \
 
 obj-$(CONFIG_EARLY_PRINTK)	+= console.o
 obj-$(CONFIG_PCI)		+= pci.o
-obj-$(CONFIG_KGDB)		+= gdb_hook.o

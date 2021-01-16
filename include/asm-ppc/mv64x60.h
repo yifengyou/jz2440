@@ -348,6 +348,8 @@ u32 mv64x60_calc_mem_size(struct mv64x60_handle *bh,
 
 void mv64x60_progress_init(u32 base);
 void mv64x60_mpsc_progress(char *s, unsigned short hex);
+struct platform_device *mv64x60_early_get_pdev_data(const char *name,
+		int id, int remove);
 
 extern struct mv64x60_32bit_window
 	gt64260_32bit_windows[MV64x60_32BIT_WIN_COUNT];

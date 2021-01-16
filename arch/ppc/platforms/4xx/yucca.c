@@ -386,7 +386,4 @@ void __init platform_init(unsigned long r3, unsigned long r4,
 	ppc_md.get_irq = NULL;		/* Set in ppc4xx_pic_init() */
 
 	ppc_md.calibrate_decr = yucca_calibrate_decr;
-#ifdef CONFIG_KGDB
-	ppc_md.early_serial_map = yucca_early_serial_map;
-#endif
 }

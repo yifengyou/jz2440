@@ -77,7 +77,6 @@ obj-$(CONFIG_PCI_8260)		+= m82xx_pci.o pci_auto.o
 obj-$(CONFIG_8260_PCI9)		+= m8260_pci_erratum9.o
 obj-$(CONFIG_CPM2)		+= cpm2_common.o cpm2_pic.o
 ifeq ($(CONFIG_PPC_GEN550),y)
-obj-$(CONFIG_KGDB)		+= gen550_kgdb.o gen550_dbg.o
 obj-$(CONFIG_SERIAL_TEXT_DEBUG)	+= gen550_dbg.o
 endif
 ifeq ($(CONFIG_SERIAL_MPSC_CONSOLE),y)

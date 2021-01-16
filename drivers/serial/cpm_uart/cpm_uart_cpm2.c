@@ -289,6 +289,10 @@ int cpm_uart_init_portdesc(void)
 #endif
 	pr_debug("CPM uart[-]:init portdesc\n");
 
+	/* Check if we have called this yet. This may happen if early kgdb
+	breakpoint is on */
+	if (cpm_uart_nr)
+		return 0;
 	cpm_uart_nr = 0;
 #ifdef CONFIG_SERIAL_CPM_SMC1
 	cpm_uart_ports[UART_SMC1].smcp = (smc_t *) cpm2_map(im_smc[0]);

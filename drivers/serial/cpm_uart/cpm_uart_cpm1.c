@@ -53,6 +53,7 @@ void cpm_line_cr_cmd(int line, int cmd)
 {
 	ushort val;
 	volatile cpm8xx_t *cp = cpmp;
+	unsigned *bcsr_io;
 
 	switch (line) {
 	case UART_SMC1:
@@ -95,12 +96,35 @@ void scc1_lineif(struct uart_cpm_port *pinfo)
 {
 	/* XXX SCC1: insert port configuration here */
 	pinfo->brg = 1;
+
+#if defined (CONFIG_MPC885ADS) || defined (CONFIG_MPC86XADS)
+	bcsr_io = ioremap(BCSR1, sizeof(unsigned long));
+
+	if (bcsr_io == NULL) {
+		printk(KERN_CRIT "Could not remap BCSR\n");
+		return;
+	}
+	out_be32(bcsr_io, in_be32(bcsr_io) & ~BCSR1_RS232EN_1);
+	iounmap(bcsr_io);
+#endif
 }
 
 void scc2_lineif(struct uart_cpm_port *pinfo)
 {
 	/* XXX SCC2: insert port configuration here */
 	pinfo->brg = 2;
+	unsigned *bcsr_io;
+
+#if defined (CONFIG_MPC885ADS) || defined (CONFIG_MPC86XADS)
+	bcsr_io = ioremap(BCSR1, sizeof(unsigned long));
+
+	if (bcsr_io == NULL) {
+		printk(KERN_CRIT "Could not remap BCSR\n");
+		return;
+	}
+	out_be32(bcsr_io, in_be32(bcsr_io) & ~BCSR1_RS232EN_2);
+	iounmap(bcsr_io);
+#endif
 }
 
 void scc3_lineif(struct uart_cpm_port *pinfo)
@@ -189,6 +213,10 @@ int cpm_uart_init_portdesc(void)
 {
 	pr_debug("CPM uart[-]:init portdesc\n");
 
+	/* Check if we have called this yet. This may happen if early kgdb
+	breakpoint is on */
+	if (cpm_uart_nr)
+		return 0;
 	cpm_uart_nr = 0;
 #ifdef CONFIG_SERIAL_CPM_SMC1
 	cpm_uart_ports[UART_SMC1].smcp = &cpmp->cp_smc[0];

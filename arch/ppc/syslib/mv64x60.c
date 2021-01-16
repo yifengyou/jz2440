@@ -241,6 +241,12 @@ static struct resource mv64x60_mpsc0_resources[] = {
 		.end	= MV64x60_IRQ_SDMA_0,
 		.flags	= IORESOURCE_IRQ,
 	},
+	[4] = {
+		.name	= "mpsc 0 irq",
+		.start	= MV64x60_IRQ_MPSC_0,
+		.end	= MV64x60_IRQ_MPSC_0,
+		.flags	= IORESOURCE_IRQ,
+	},
 };
 
 static struct platform_device mpsc0_device = {
@@ -296,6 +302,12 @@ static struct resource mv64x60_mpsc1_resources[] = {
 		.name	= "sdma 1 irq",
 		.start	= MV64360_IRQ_SDMA_1,
 		.end	= MV64360_IRQ_SDMA_1,
+		.flags	= IORESOURCE_IRQ,
+	},
+	[4] = {
+		.name	= "mpsc 1 irq",
+		.start	= MV64360_IRQ_MPSC_1,
+		.end	= MV64360_IRQ_MPSC_1,
 		.flags	= IORESOURCE_IRQ,
 	},
 };
@@ -1432,10 +1444,45 @@ mv64x60_pd_fixup(struct mv64x60_handle *bh, struct platform_device *pd_devs[],
 static int __init
 mv64x60_add_pds(void)
 {
-	return platform_add_devices(mv64x60_pd_devs,
-		ARRAY_SIZE(mv64x60_pd_devs));
+	int i, ret = 0;
+
+	for (i = 0; i < ARRAY_SIZE(mv64x60_pd_devs); i++) {
+		if (mv64x60_pd_devs[i]) {
+			ret = platform_device_register(mv64x60_pd_devs[i]);
+		}
+		if (ret) {
+			while (--i >= 0)
+				platform_device_unregister(mv64x60_pd_devs[i]);
+			break;
+		}
+	}
+	return ret;
 }
 arch_initcall(mv64x60_add_pds);
+
+/*
+ * mv64x60_early_get_pdev_data()
+ *
+ * Get the data associated with a platform device by name and number.
+ */
+struct platform_device *__init
+mv64x60_early_get_pdev_data(const char *name, int id, int remove)
+{
+	int i;
+	struct platform_device *pdev;
+
+	for (i = 0; i < ARRAY_SIZE(mv64x60_pd_devs); i++) {
+		pdev = mv64x60_pd_devs[i];
+		if (pdev &&
+			pdev->id == id &&
+			!strcmp(pdev->name, name)) {
+			if (remove)
+				mv64x60_pd_devs[i] = NULL;
+			return pdev;
+		}
+	}
+	return NULL;
+}
 
 /*
  *****************************************************************************
@@ -1764,11 +1811,15 @@ gt64260a_chip_specific_init(struct mv64x60_handle *bh,
 	mv64x60_mpsc0_pdata.cache_mgmt = 1;
 	mv64x60_mpsc1_pdata.mirror_regs = 1;
 	mv64x60_mpsc1_pdata.cache_mgmt = 1;
-
-	if ((r = platform_get_resource(&mpsc1_device, IORESOURCE_IRQ, 0))
-			!= NULL) {
+	r = platform_get_resource(&mpsc1_device, IORESOURCE_IRQ, 0);
+	if (r != NULL) {
 		r->start = MV64x60_IRQ_SDMA_0;
 		r->end = MV64x60_IRQ_SDMA_0;
+	}
+	r = platform_get_resource(&mpsc1_device, IORESOURCE_IRQ, 1);
+	if (r != NULL) {
+		r->start = GT64260_IRQ_MPSC_1;
+		r->end = GT64260_IRQ_MPSC_1;
 	}
 #endif
 }

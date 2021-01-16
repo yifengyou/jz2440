@@ -35,9 +35,9 @@
 #include <asm/hawk.h>
 #include <asm/todc.h>
 #include <asm/bootinfo.h>
-#include <asm/kgdb.h>
 #include <asm/reg.h>
 
+#include <syslib/gen550.h>
 #include "pplus.h"
 
 #undef DUMP_DBATS
@@ -893,9 +893,6 @@ platform_init(unsigned long r3, unsigned long r4, unsigned long r5,
 #ifdef CONFIG_SERIAL_TEXT_DEBUG
 	ppc_md.progress = gen550_progress;
 #endif				/* CONFIG_SERIAL_TEXT_DEBUG */
-#ifdef CONFIG_KGDB
-	ppc_md.kgdb_map_scc = gen550_kgdb_map_scc;
-#endif
 #ifdef CONFIG_SMP
 	smp_ops = &pplus_smp_ops;
 #endif				/* CONFIG_SMP */

@@ -330,7 +330,7 @@ ev64260_early_serial_map(void)
 		port.iotype = UPIO_MEM;
 		port.flags = STD_COM_FLAGS;
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 		gen550_init(0, &port);
 #endif
 
@@ -568,7 +568,7 @@ ev64260_set_bat(void)
 	return;
 }
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 static void __init
 ev64260_map_io(void)
 {
@@ -624,20 +624,12 @@ platform_init(unsigned long r3, unsigned long r4, unsigned long r5,
 	ppc_md.setup_io_mappings = ev64260_map_io;
 	ppc_md.progress = gen550_progress;
 #endif
-#if defined(CONFIG_KGDB)
-	ppc_md.setup_io_mappings = ev64260_map_io;
-	ppc_md.early_serial_map = ev64260_early_serial_map;
-#endif
 #elif defined(CONFIG_SERIAL_MPSC_CONSOLE)
 #ifdef	CONFIG_SERIAL_TEXT_DEBUG
 	ppc_md.setup_io_mappings = ev64260_map_io;
 	ppc_md.progress = mv64x60_mpsc_progress;
 	mv64x60_progress_init(CONFIG_MV64X60_NEW_BASE);
 #endif	/* CONFIG_SERIAL_TEXT_DEBUG */
-#ifdef	CONFIG_KGDB
-	ppc_md.setup_io_mappings = ev64260_map_io;
-	ppc_md.early_serial_map = ev64260_early_serial_map;
-#endif	/* CONFIG_KGDB */
 
 #endif
 

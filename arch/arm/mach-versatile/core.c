@@ -184,6 +184,14 @@ static struct map_desc versatile_io_desc[] __initdata = {
 		.type		= MT_DEVICE
 	},
 #endif
+#ifdef CONFIG_KGDB_AMBA_PL011
+	{
+		.virtual	=  IO_ADDRESS(CONFIG_KGDB_AMBA_BASE),
+		.pfn		= __phys_to_pfn(CONFIG_KGDB_AMBA_BASE),
+		.length		= SZ_4K,
+		.type		= MT_DEVICE
+	},
+#endif
 #ifdef CONFIG_PCI
  	{
 		.virtual	=  IO_ADDRESS(VERSATILE_PCI_CORE_BASE),

@@ -310,7 +310,7 @@ taishan_early_serial_map(void)
 	if (early_serial_setup(&port) != 0)
 		printk("Early serial init of port 0 failed\n");
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 	/* Configure debug serial access */
 	gen550_init(0, &port);
 
@@ -326,7 +326,7 @@ taishan_early_serial_map(void)
 	if (early_serial_setup(&port) != 0)
 		printk("Early serial init of port 1 failed\n");
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 	/* Configure debug serial access */
 	gen550_init(1, &port);
 #endif
@@ -387,9 +387,6 @@ void __init platform_init(unsigned long r3, unsigned long r4,
 
 	ppc_md.calibrate_decr = taishan_calibrate_decr;
 
-#ifdef CONFIG_KGDB
-	ppc_md.early_serial_map = taishan_early_serial_map;
-#endif
 	ppc_md.init = taishan_init;
 }
 

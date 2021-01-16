@@ -7,4 +7,5 @@ config SND_S3C24XX_SOC
 	  to select the audio interfaces to support below.
 
 config SND_S3C24XX_SOC_I2S
-	tristate
+	tristate "I2S of the Samsung S3C24XX chips"
+	depends on ARCH_S3C2410 && SND_SOC

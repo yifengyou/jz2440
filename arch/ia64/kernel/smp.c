@@ -48,6 +48,7 @@
 #include <asm/tlbflush.h>
 #include <asm/unistd.h>
 #include <asm/mca.h>
+#include <linux/kgdb.h>
 
 /*
  * Note: alignment of 4 entries/cacheline was empirically determined
@@ -79,6 +80,9 @@ static volatile struct call_data_struct *call_data;
 
 #define IPI_CALL_FUNC		0
 #define IPI_CPU_STOP		1
+#ifdef	CONFIG_KGDB
+#define	IPI_KGDB_INTERRUPT	2
+#endif
 #define IPI_KDUMP_CPU_STOP	3
 
 /* This needs to be cacheline aligned because it is written to by *other* CPUs.  */
@@ -169,6 +173,11 @@ handle_IPI (int irq, void *dev_id)
 			      case IPI_CPU_STOP:
 				stop_this_cpu();
 				break;
+#ifdef	CONFIG_KGDB
+			      case IPI_KGDB_INTERRUPT:
+				kgdb_wait_ipi(get_irq_regs());
+				break;
+#endif
 #ifdef CONFIG_KEXEC
 			      case IPI_KDUMP_CPU_STOP:
 				unw_init_running(kdump_cpu_freeze, NULL);
@@ -398,6 +407,14 @@ smp_call_function_single (int cpuid, void (*func) (void *info), void *info, int 
 	return 0;
 }
 EXPORT_SYMBOL(smp_call_function_single);
+
+#ifdef	CONFIG_KGDB
+void
+smp_send_nmi_allbutself(void)
+{
+	send_IPI_allbutself(IPI_KGDB_INTERRUPT);
+}
+#endif
 
 /*
  * this function sends a 'generic call function' IPI to all other CPUs

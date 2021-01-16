@@ -96,6 +96,10 @@ static void __init coyote_init(void)
 	}
 
 	platform_add_devices(coyote_devices, ARRAY_SIZE(coyote_devices));
+
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_platform_port(0, &coyote_uart_data);
+#endif
 }
 
 #ifdef CONFIG_ARCH_ADI_COYOTE

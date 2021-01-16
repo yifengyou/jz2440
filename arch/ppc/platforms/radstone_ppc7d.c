@@ -84,7 +84,7 @@ unsigned char __res[sizeof(bd_t)];
  * Serial port code
  *****************************************************************************/
 
-#if defined(CONFIG_KGDB) || defined(CONFIG_SERIAL_TEXT_DEBUG)
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
 static void __init ppc7d_early_serial_map(void)
 {
 #if defined(CONFIG_SERIAL_MPSC_CONSOLE)
@@ -113,10 +113,10 @@ static void __init ppc7d_early_serial_map(void)
 	if (early_serial_setup(&serial_req) != 0)
 		printk(KERN_ERR "Early serial init of port 1 failed\n");
 #else
-#error CONFIG_KGDB || CONFIG_SERIAL_TEXT_DEBUG has no supported CONFIG_SERIAL_XXX
+#error CONFIG_SERIAL_TEXT_DEBUG has no supported CONFIG_SERIAL_XXX
 #endif
 }
-#endif /* CONFIG_KGDB || CONFIG_SERIAL_TEXT_DEBUG */
+#endif /* CONFIG_SERIAL_TEXT_DEBUG */
 
 /*****************************************************************************
  * Low-level board support code
@@ -1459,18 +1459,16 @@ void __init platform_init(unsigned long r3, unsigned long r4, unsigned long r5,
 	     PPC7D_CPLD_COMS_COM4_TXEN, PPC7D_CPLD_COMS);
 #endif /* CONFIG_SERIAL_MPSC */
 
-#if defined(CONFIG_KGDB) || defined(CONFIG_SERIAL_TEXT_DEBUG)
-	ppc7d_early_serial_map();
 #ifdef  CONFIG_SERIAL_TEXT_DEBUG
+	ppc7d_early_serial_map();
 #if defined(CONFIG_SERIAL_MPSC_CONSOLE)
 	ppc_md.progress = mv64x60_mpsc_progress;
 #elif defined(CONFIG_SERIAL_8250)
 	ppc_md.progress = gen550_progress;
 #else
-#error CONFIG_KGDB || CONFIG_SERIAL_TEXT_DEBUG has no supported CONFIG_SERIAL_XXX
+#error CONFIG_SERIAL_TEXT_DEBUG has no supported CONFIG_SERIAL_XXX
 #endif /* CONFIG_SERIAL_8250 */
 #endif /* CONFIG_SERIAL_TEXT_DEBUG */
-#endif /* CONFIG_KGDB || CONFIG_SERIAL_TEXT_DEBUG */
 
 	/* Enable write access to user flash.  This is necessary for
 	 * flash probe.

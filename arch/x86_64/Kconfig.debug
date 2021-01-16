@@ -55,7 +55,4 @@ config DEBUG_STACK_USAGE
 
 	  This option will slow down process creation somewhat.
 
-#config X86_REMOTE_DEBUG
-#       bool "kgdb debugging stub"
-
 endmenu

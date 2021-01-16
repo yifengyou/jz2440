@@ -131,7 +131,7 @@ static void s3c2410fb_set_lcdaddr(struct s3c2410fb_info *fbi)
 	saddr2 += (var->xres * var->yres * var->bits_per_pixel)/8;
 	saddr2>>= 1;
 
-	saddr3 =  S3C2410_OFFSIZE(0) | S3C2410_PAGEWIDTH((var->xres * var->bits_per_pixel / 16) & 0x3ff);
+    saddr3 =  S3C2410_OFFSIZE(0) | S3C2410_PAGEWIDTH((var->xres * var->bits_per_pixel / 16) & 0x7ff);
 
 	dprintk("LCDSADDR1 = 0x%08lx\n", saddr1);
 	dprintk("LCDSADDR2 = 0x%08lx\n", saddr2);
@@ -150,19 +150,10 @@ static void s3c2410fb_set_lcdaddr(struct s3c2410fb_info *fbi)
 static unsigned int s3c2410fb_calc_pixclk(struct s3c2410fb_info *fbi,
 					  unsigned long pixclk)
 {
-	unsigned long clk = clk_get_rate(fbi->clk);
+	unsigned long clk = clk_get_rate(fbi->clk); // hclk get
 	unsigned long long div;
 
-	/* pixclk is in picoseoncds, our clock is in Hz
-	 *
-	 * Hz -> picoseconds is / 10^-12
-	 */
-
-	div = (unsigned long long)clk * pixclk;
-	do_div(div,1000000UL);
-	do_div(div,1000000UL);
-
-	dprintk("pixclk %ld, divisor is %ld\n", pixclk, (long)div);
+	div = (unsigned long long)clk / pixclk;
 	return div;
 }
 
@@ -710,9 +701,39 @@ static int s3c2410fb_init_registers(struct s3c2410fb_info *fbi)
 	/* ensure temporary palette disabled */
 	writel(0x00, S3C2410_TPAL);
 
+
+#if 0	
+	/* ghcstop modified */
+	s3c2410_gpio_cfgpin(S3C2410_GPC5, S3C2410_GPC5_OUTP); // lcd display enable/disable
+	s3c2410_gpio_cfgpin(S3C2410_GPB1, S3C2410_GPB1_OUTP); // back light control
+	s3c2410_gpio_cfgpin(S3C2410_GPH6, S3C2410_GPH6_OUTP); 
+	
+	s3c2410_gpio_pullup(S3C2410_GPC5, 0); 
+	s3c2410_gpio_pullup(S3C2410_GPB1, 0);
+	s3c2410_gpio_pullup(S3C2410_GPH6, 0);
+
+	s3c2410_gpio_setpin(S3C2410_GPC5, 1);
+	s3c2410_gpio_setpin(S3C2410_GPH6, 1); 
+	s3c2410_gpio_setpin(S3C2410_GPB1, 1);
+#else
+	/* thisway.diy@163.com modify again, for eBlocks */
+	s3c2410_gpio_cfgpin(S3C2410_GPB0, S3C2410_GPB0_OUTP); // back light control
+
+	s3c2410_gpio_pullup(S3C2410_GPB0, 0); 
+
+	s3c2410_gpio_setpin(S3C2410_GPB0, 1);	// back light control, enable
+#endif
+	
+	/* probably not required */
+	msleep(10);		
+
 	/* Enable video by setting the ENVID bit to 1 */
 	fbi->regs.lcdcon1 |= S3C2410_LCDCON1_ENVID;
 	writel(fbi->regs.lcdcon1, S3C2410_LCDCON1);
+
+	// add by thisway.diy@163.com, for eBlocks
+	s3c2410_gpio_setpin(S3C2410_GPB0, 1);	// back light control
+
 	return 0;
 }
 
@@ -805,6 +826,9 @@ static int __init s3c2410fb_probe(struct platform_device *pdev)
 	info->regs.lcdcon1 &= ~S3C2410_LCDCON1_ENVID;
 	lcdcon1 = readl(S3C2410_LCDCON1);
 	writel(lcdcon1 & ~S3C2410_LCDCON1_ENVID, S3C2410_LCDCON1);
+
+	// add by thisway.diy@163.com, for eBlocks
+	s3c2410_gpio_setpin(S3C2410_GPB0, 0);	// back light control
 
 	info->mach_info		    = pdev->dev.platform_data;
 
@@ -937,6 +961,9 @@ static void s3c2410fb_stop_lcd(struct s3c2410fb_info *fbi)
 	fbi->regs.lcdcon1 &= ~S3C2410_LCDCON1_ENVID;
 	writel(fbi->regs.lcdcon1, S3C2410_LCDCON1);
 
+	// add by thisway.diy@163.com, for eBlocks
+	s3c2410_gpio_setpin(S3C2410_GPB0, 0);	// back light control
+
 	local_irq_restore(flags);
 }
 
@@ -976,7 +1003,7 @@ static int s3c2410fb_suspend(struct platform_device *dev, pm_message_t state)
 {
 	struct fb_info	   *fbinfo = platform_get_drvdata(dev);
 	struct s3c2410fb_info *info = fbinfo->par;
-
+printk("100ask suspend\n");
 	s3c2410fb_stop_lcd(info);
 
 	/* sleep before disabling the clock, we need to ensure
@@ -994,6 +1021,7 @@ static int s3c2410fb_resume(struct platform_device *dev)
 	struct fb_info	   *fbinfo = platform_get_drvdata(dev);
 	struct s3c2410fb_info *info = fbinfo->par;
 
+printk("100ask resume\n");
 	clk_enable(info->clk);
 	msleep(1);
 

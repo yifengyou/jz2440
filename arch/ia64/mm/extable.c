@@ -6,6 +6,7 @@
  */
 
 #include <linux/sort.h>
+#include <linux/kgdb.h>
 
 #include <asm/uaccess.h>
 #include <asm/module.h>
@@ -73,6 +74,11 @@ search_extable (const struct exception_table_entry *first,
                 else
                         last = mid - 1;
         }
+#ifdef CONFIG_KGDB
+	if (atomic_read(&debugger_active) && kgdb_may_fault)
+		kgdb_fault_longjmp(kgdb_fault_jmp_regs);
+		/* Not reached. */
+#endif
         return NULL;
 }
 

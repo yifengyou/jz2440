@@ -39,10 +39,6 @@ extern void mips_reboot_setup(void);
 extern void mips_time_init(void);
 extern unsigned long mips_rtc_get_time(void);
 
-#ifdef CONFIG_KGDB
-extern void kgdb_config(void);
-#endif
-
 struct resource standard_io_resources[] = {
 	{ .name = "dma1", .start = 0x00, .end = 0x1f, .flags = IORESOURCE_BUSY },
 	{ .name = "timer", .start = 0x40, .end = 0x5f, .flags = IORESOURCE_BUSY },
@@ -98,10 +94,6 @@ void __init plat_mem_setup(void)
 	 * Enable DMA channel 4 (cascade channel) in the PIIX4 south bridge.
 	 */
 	enable_dma(4);
-
-#ifdef CONFIG_KGDB
-	kgdb_config ();
-#endif
 
 	if (mips_revision_sconid == MIPS_REVISION_SCON_BONITO) {
 		char *argptr;

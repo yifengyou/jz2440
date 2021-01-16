@@ -34,7 +34,7 @@ static struct mv64x60_handle	mv64x60_dbg_bh;
 void
 mv64x60_progress_init(u32 base)
 {
-	mv64x60_dbg_bh.v_base = base;
+	mv64x60_dbg_bh.v_base = (void *)base;
 	return;
 }
 
@@ -69,53 +69,3 @@ mv64x60_mpsc_progress(char *s, unsigned short hex)
 	return;
 }
 #endif	/* CONFIG_SERIAL_TEXT_DEBUG */
-
-
-#if defined(CONFIG_KGDB)
-
-#if defined(CONFIG_KGDB_TTYS0)
-#define KGDB_PORT 0
-#elif defined(CONFIG_KGDB_TTYS1)
-#define KGDB_PORT 1
-#else
-#error "Invalid kgdb_tty port"
-#endif
-
-void
-putDebugChar(unsigned char c)
-{
-	mv64x60_polled_putc(KGDB_PORT, (char)c);
-}
-
-int
-getDebugChar(void)
-{
-	unsigned char	c;
-
-	while (!mv64x60_polled_getc(KGDB_PORT, &c));
-	return (int)c;
-}
-
-void
-putDebugString(char* str)
-{
-	while (*str != '\0') {
-		putDebugChar(*str);
-		str++;
-	}
-	putDebugChar('\r');
-	return;
-}
-
-void
-kgdb_interruptible(int enable)
-{
-}
-
-void
-kgdb_map_scc(void)
-{
-	if (ppc_md.early_serial_map)
-		ppc_md.early_serial_map();
-}
-#endif	/* CONFIG_KGDB */

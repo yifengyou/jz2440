@@ -281,25 +281,6 @@ static void __init hdpu_setup_bridge(void)
 #if defined(CONFIG_SERIAL_MPSC_CONSOLE)
 static void __init hdpu_early_serial_map(void)
 {
-#ifdef	CONFIG_KGDB
-	static char first_time = 1;
-
-#if defined(CONFIG_KGDB_TTYS0)
-#define KGDB_PORT 0
-#elif defined(CONFIG_KGDB_TTYS1)
-#define KGDB_PORT 1
-#else
-#error "Invalid kgdb_tty port"
-#endif
-
-	if (first_time) {
-		gt_early_mpsc_init(KGDB_PORT,
-				   B9600 | CS8 | CREAD | HUPCL | CLOCAL);
-		first_time = 0;
-	}
-
-	return;
-#endif
 }
 #endif
 

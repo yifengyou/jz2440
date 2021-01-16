@@ -11,4 +11,3 @@
 
 extern void gen550_progress(char *, unsigned short);
 extern void gen550_init(int, struct uart_port *);
-extern void gen550_kgdb_map_scc(void);

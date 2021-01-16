@@ -332,7 +332,8 @@ static int pl011_startup(struct uart_port *port)
 	/*
 	 * Allocate the IRQ
 	 */
-	retval = request_irq(uap->port.irq, pl011_int, 0, "uart-pl011", uap);
+	retval = request_irq(uap->port.irq, pl011_int, SA_SHIRQ,
+			 "uart-pl011", uap);
 	if (retval)
 		goto clk_dis;
 

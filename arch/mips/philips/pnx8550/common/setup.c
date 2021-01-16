@@ -145,16 +145,5 @@ void __init plat_mem_setup(void)
 		ip3106_baud(UART_BASE, pnx8550_console_port) = 5;
 	}
 
-#ifdef CONFIG_KGDB
-	argptr = prom_getcmdline();
-	if ((argptr = strstr(argptr, "kgdb=ttyS")) != NULL) {
-		int line;
-		argptr += strlen("kgdb=ttyS");
-		line = *argptr == '0' ? 0 : 1;
-		rs_kgdb_hook(line);
-		pr_info("KGDB: Using ttyS%i for session, "
-		        "please connect your debugger\n", line ? 1 : 0);
-	}
-#endif
 	return;
 }

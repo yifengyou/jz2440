@@ -29,6 +29,7 @@
 #include <linux/initrd.h>
 #include <linux/module.h>
 #include <linux/fsl_devices.h>
+#include <linux/kgdb.h>
 
 #include <asm/system.h>
 #include <asm/pgtable.h>
@@ -43,14 +44,13 @@
 #include <asm/mpc85xx.h>
 #include <asm/irq.h>
 #include <asm/immap_85xx.h>
-#include <asm/kgdb.h>
 #include <asm/ppc_sys.h>
 #include <mm/mmu_decl.h>
 
 #include <syslib/ppc85xx_common.h>
 #include <syslib/ppc85xx_setup.h>
+#include <syslib/gen550.h>
 
-#ifdef CONFIG_SERIAL_8250
 static void __init
 sbc8560_early_serial_map(void)
 {
@@ -66,12 +66,16 @@ sbc8560_early_serial_map(void)
         uart_req.membase = ioremap(uart_req.mapbase, MPC85xx_UART0_SIZE);
 	uart_req.type = PORT_16650;
 
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
+#ifdef CONFIG_SERIAL_8250
+	if (early_serial_setup(&uart_req) != 0)
+		printk(KERN_ERR "Early serial init of port 0 failed\n");
+#endif
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
         gen550_init(0, &uart_req);
 #endif
- 
-        if (early_serial_setup(&uart_req) != 0)
-                printk("Early serial init of port 0 failed\n");
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(0, &uart_req);
+#endif
  
         /* Assume early_serial_setup() doesn't modify uart_req */
 	uart_req.line = 1;
@@ -79,14 +83,17 @@ sbc8560_early_serial_map(void)
         uart_req.membase = ioremap(uart_req.mapbase, MPC85xx_UART1_SIZE);
 	uart_req.irq = MPC85xx_IRQ_EXT10;
  
-#if defined(CONFIG_SERIAL_TEXT_DEBUG) || defined(CONFIG_KGDB)
-        gen550_init(1, &uart_req);
-#endif
- 
+#ifdef CONFIG_SERIAL_8250
         if (early_serial_setup(&uart_req) != 0)
-                printk("Early serial init of port 1 failed\n");
-}
+		printk(KERN_ERR "Early serial init of port 0 failed\n");
 #endif
+#ifdef CONFIG_SERIAL_TEXT_DEBUG
+	gen550_init(0, &uart_req);
+#endif
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_port(0, &uart_req);
+#endif
+}
 
 /* ************************************************************************
  *
@@ -115,9 +122,7 @@ sbc8560_setup_arch(void)
 	/* setup PCI host bridges */
 	mpc85xx_setup_hose();
 #endif
-#ifdef CONFIG_SERIAL_8250
 	sbc8560_early_serial_map();
-#endif
 #ifdef CONFIG_SERIAL_TEXT_DEBUG
 	/* Invalidate the entry we stole earlier the serial ports
 	 * should be properly mapped */ 
@@ -224,9 +229,6 @@ platform_init(unsigned long r3, unsigned long r4, unsigned long r5,
 #if defined(CONFIG_SERIAL_8250) && defined(CONFIG_SERIAL_TEXT_DEBUG)
 	ppc_md.progress = gen550_progress;
 #endif	/* CONFIG_SERIAL_8250 && CONFIG_SERIAL_TEXT_DEBUG */
-#if defined(CONFIG_SERIAL_8250) && defined(CONFIG_KGDB)
-	ppc_md.early_serial_map = sbc8560_early_serial_map;
-#endif	/* CONFIG_SERIAL_8250 && CONFIG_KGDB */
 
 	if (ppc_md.progress)
 		ppc_md.progress("sbc8560_init(): exit", 0);

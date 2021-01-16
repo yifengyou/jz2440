@@ -3,6 +3,7 @@
  */
 #include <linux/module.h>
 #include <linux/spinlock.h>
+#include <linux/kgdb.h>
 #include <asm/branch.h>
 #include <asm/uaccess.h>
 
@@ -16,6 +17,12 @@ int fixup_exception(struct pt_regs *regs)
 
 		return 1;
 	}
+#ifdef CONFIG_KGDB
+	if (atomic_read(&debugger_active) && kgdb_may_fault)
+		/* Restore our previous state. */
+		kgdb_fault_longjmp(kgdb_fault_jmp_regs);
+		/* Not reached. */
+#endif
 
 	return 0;
 }

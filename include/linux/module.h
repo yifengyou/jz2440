@@ -227,7 +227,16 @@ enum module_state
 	MODULE_STATE_LIVE,
 	MODULE_STATE_COMING,
 	MODULE_STATE_GOING,
+	MODULE_STATE_GONE,
 };
+
+#ifdef CONFIG_KGDB
+#define MAX_SECTNAME 31
+struct mod_section {
+	void *address;
+	char name[MAX_SECTNAME + 1];
+};
+#endif
 
 /* Similar stuff for section attributes. */
 struct module_sect_attr
@@ -255,6 +264,13 @@ struct module
 
 	/* Unique handle for this module */
 	char name[MODULE_NAME_LEN];
+
+#ifdef CONFIG_KGDB
+	/* keep kgdb info at the begining so that gdb doesn't have a chance to
+	 * miss out any fields */
+	unsigned long num_sections;
+	struct mod_section *mod_sections;
+#endif
 
 	/* Sysfs stuff. */
 	struct module_kobject mkobj;

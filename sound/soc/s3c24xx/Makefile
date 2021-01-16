@@ -4,3 +4,4 @@ snd-soc-s3c24xx-i2s-objs := s3c24xx-i2s.o
 
 obj-$(CONFIG_SND_S3C24XX_SOC) += snd-soc-s3c24xx.o
 obj-$(CONFIG_SND_S3C24XX_SOC_I2S) += snd-soc-s3c24xx-i2s.o
+obj-y += s3c2410-uda1341.o

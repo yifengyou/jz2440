@@ -124,6 +124,7 @@ EXPORT_SYMBOL(ist_info);
 #endif
 
 extern void early_cpu_init(void);
+extern void early_trap_init(void);
 extern int root_mountflags;
 
 unsigned long saved_videomode;
@@ -514,6 +515,7 @@ void __init setup_arch(char **cmdline_p)
 	memcpy(&boot_cpu_data, &new_cpu_data, sizeof(new_cpu_data));
 	pre_setup_arch_hook();
 	early_cpu_init();
+	early_trap_init();
 
 	/*
 	 * FIXME: This isn't an official loader_type right

@@ -46,7 +46,6 @@
 #include <asm/mpc85xx.h>
 #include <asm/irq.h>
 #include <asm/immap_85xx.h>
-#include <asm/kgdb.h>
 #include <asm/ppc_sys.h>
 #include <asm/cpm2.h>
 #include <mm/mmu_decl.h>
@@ -55,6 +54,7 @@
 #include <syslib/cpm2_pic.h>
 #include <syslib/ppc85xx_common.h>
 #include <syslib/ppc85xx_rio.h>
+#include <syslib/gen550.h>
 
 #ifndef CONFIG_PCI
 unsigned long isa_io_base = 0;
@@ -121,7 +121,7 @@ tqm85xx_setup_arch(void)
 #endif
 
 #ifndef CONFIG_MPC8560
-#if defined(CONFIG_SERIAL_8250)
+#if defined(CONFIG_SERIAL_8250) || defined(CONFIG_KGDB_8250)
 	mpc85xx_early_serial_map();
 #endif
 
@@ -400,9 +400,6 @@ platform_init(unsigned long r3, unsigned long r4, unsigned long r5,
 #if defined(CONFIG_SERIAL_8250) && defined(CONFIG_SERIAL_TEXT_DEBUG)
 	ppc_md.progress = gen550_progress;
 #endif	/* CONFIG_SERIAL_8250 && CONFIG_SERIAL_TEXT_DEBUG */
-#if defined(CONFIG_SERIAL_8250) && defined(CONFIG_KGDB)
-	ppc_md.early_serial_map = mpc85xx_early_serial_map;
-#endif	/* CONFIG_SERIAL_8250 && CONFIG_KGDB */
 #endif /* CONFIG_MPC8560 */
 
 	if (ppc_md.progress)

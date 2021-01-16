@@ -40,6 +40,10 @@
 static char *serial_version = "1.09";
 static char *serial_name = "TX39/49 Serial driver";
 
+#ifndef CONFIG_KGDB_TXX9
+#define CONFIG_KGDB_PORT_NUM -1
+#endif
+
 #define PASS_LIMIT	256
 
 #if !defined(CONFIG_SERIAL_TXX9_STDSERIAL)
@@ -471,6 +475,9 @@ static int serial_txx9_startup(struct uart_port *port)
 	unsigned long flags;
 	int retval;
 
+	if (up->port.line == CONFIG_KGDB_PORT_NUM)
+		return -EBUSY;
+
 	/*
 	 * Clear the FIFO buffers and disable them.
 	 * (they will be reenabled in set_termios())
@@ -799,6 +806,9 @@ static void __init serial_txx9_register_ports(struct uart_driver *drv,
 	for (i = 0; i < UART_NR; i++) {
 		struct uart_txx9_port *up = &serial_txx9_ports[i];
 
+		if (up->port.line == CONFIG_KGDB_PORT_NUM)
+			continue;
+
 		up->port.line = i;
 		up->port.ops = &serial_txx9_pops;
 		up->port.dev = dev;
@@ -967,6 +977,9 @@ static int __devinit serial_txx9_register_port(struct uart_port *port)
 
 	mutex_lock(&serial_txx9_mutex);
 	for (i = 0; i < UART_NR; i++) {
+		if (i == CONFIG_KGDB_PORT_NUM)
+			continue;
+
 		uart = &serial_txx9_ports[i];
 		if (uart_match_port(&uart->port, port)) {
 			uart_remove_one_port(&serial_txx9_reg, &uart->port);

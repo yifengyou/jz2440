@@ -753,17 +753,11 @@ static void amiga_serial_putc(char c)
 void amiga_serial_console_write(struct console *co, const char *s,
 				       unsigned int count)
 {
-#if 0 /* def CONFIG_KGDB */
-	/* FIXME:APUS GDB doesn't seem to like O-packages before it is
-           properly connected with the target. */
-	__gdb_output_string (s, count);
-#else
 	while (count--) {
 		if (*s == '\n')
 			amiga_serial_putc('\r');
 		amiga_serial_putc(*s++);
 	}
-#endif
 }
 
 #ifdef CONFIG_SERIAL_CONSOLE

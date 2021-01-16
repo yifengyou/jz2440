@@ -68,24 +68,3 @@ int pcibios_plat_dev_init(struct pci_dev *dev)
 {
 	return 0;
 }
-
-#ifdef CONFIG_KGDB
-/*
- * The PCI scan may have moved the saa9730 I/O address, so reread
- * the address here.
- * This does mean that it's not possible to debug the PCI bus configuration
- * code, but it is better than nothing...
- */
-
-static void atlas_saa9730_base_fixup (struct pci_dev *pdev)
-{
-	extern void *saa9730_base;
-	if (pdev->bus == 0 && PCI_SLOT(pdev->devfn) == 19)
-		(void) pci_read_config_dword (pdev, 0x14, (u32 *)&saa9730_base);
-	printk ("saa9730_base = %x\n", saa9730_base);
-}
-
-DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_PHILIPS, PCI_DEVICE_ID_PHILIPS_SAA9730,
-	 atlas_saa9730_base_fixup);
-
-#endif

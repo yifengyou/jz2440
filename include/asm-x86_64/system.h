@@ -22,7 +22,9 @@
 
 /* Save restore flags to clear handle leaking NT */
 #define switch_to(prev,next,last) \
-	asm volatile(SAVE_CONTEXT						    \
+       asm volatile(".globl __switch_to_begin\n\t"			\
+		     "__switch_to_begin:\n\t"				\
+		     SAVE_CONTEXT					\
 		     "movq %%rsp,%P[threadrsp](%[prev])\n\t" /* save RSP */	  \
 		     "movq %P[threadrsp](%[next]),%%rsp\n\t" /* restore RSP */	  \
 		     "call __switch_to\n\t"					  \
@@ -34,6 +36,8 @@
 		     "movq %%rax,%%rdi\n\t" 					  \
 		     "jc   ret_from_fork\n\t"					  \
 		     RESTORE_CONTEXT						    \
+		     "\n.globl __switch_to_end\n\t"			\
+		     "__switch_to_end:\n\t"				\
 		     : "=a" (last)					  	  \
 		     : [next] "S" (next), [prev] "D" (prev),			  \
 		       [threadrsp] "i" (offsetof(struct task_struct, thread.rsp)), \

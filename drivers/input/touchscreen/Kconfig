@@ -11,6 +11,11 @@ menuconfig INPUT_TOUCHSCREEN
 
 if INPUT_TOUCHSCREEN
 
+config TOUCHSCREEN_S3C2410
+	tristate "S3C2410/S3C2440 touchscreens"
+	help
+          S3C2410/S3C2440 touchscreens
+
 config TOUCHSCREEN_ADS7846
 	tristate "ADS7846/TSC2046 and ADS7843 based touchscreens"
 	depends on SPI_MASTER

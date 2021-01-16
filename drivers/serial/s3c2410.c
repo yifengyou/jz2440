@@ -1822,6 +1822,25 @@ static int s3c24xx_serial_init_ports(struct s3c24xx_uart_info *info)
 
 	platdev_ptr = s3c24xx_uart_devs;
 
+	// configure GPIO as UART, www.100ask.net
+	s3c2410_gpio_cfgpin(S3C2410_GPH2, S3C2410_GPH2_TXD0);
+	s3c2410_gpio_pullup(S3C2410_GPH2, 1);
+	s3c2410_gpio_cfgpin(S3C2410_GPH3, S3C2410_GPH3_RXD0);
+	s3c2410_gpio_pullup(S3C2410_GPH3, 1);		
+
+#if NR_PORTS > 1
+	s3c2410_gpio_cfgpin(S3C2410_GPH4, S3C2410_GPH4_TXD1);
+	s3c2410_gpio_pullup(S3C2410_GPH4, 1);
+	s3c2410_gpio_cfgpin(S3C2410_GPH5, S3C2410_GPH5_RXD1);
+	s3c2410_gpio_pullup(S3C2410_GPH5, 1);		
+#endif
+#if NR_PORTS > 2
+	s3c2410_gpio_cfgpin(S3C2410_GPH6, S3C2410_GPH6_TXD2);
+	s3c2410_gpio_pullup(S3C2410_GPH6, 1);
+	s3c2410_gpio_cfgpin(S3C2410_GPH7, S3C2410_GPH7_RXD2);
+	s3c2410_gpio_pullup(S3C2410_GPH7, 1);		
+#endif
+
 	for (i = 0; i < NR_PORTS; i++, ptr++, platdev_ptr++) {
 		s3c24xx_serial_init_port(ptr, info, *platdev_ptr);
 	}

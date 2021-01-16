@@ -47,12 +47,12 @@
 #include <asm/immap_85xx.h>
 #include <asm/cpm2.h>
 #include <asm/ppc_sys.h>
-#include <asm/kgdb.h>
 
 #include <mm/mmu_decl.h>
 #include <syslib/cpm2_pic.h>
 #include <syslib/ppc85xx_common.h>
 #include <syslib/ppc85xx_setup.h>
+#include <syslib/gen550.h>
 
 
 #ifndef CONFIG_PCI
@@ -436,7 +436,7 @@ mpc85xx_cds_setup_arch(void)
 	mpc85xx_setup_hose();
 #endif
 
-#ifdef CONFIG_SERIAL_8250
+#if defined(CONFIG_SERIAL_8250) || defined(CONFIG_KGDB_8250)
 	mpc85xx_early_serial_map();
 #endif
 
@@ -590,9 +590,6 @@ platform_init(unsigned long r3, unsigned long r4, unsigned long r5,
 #if defined(CONFIG_SERIAL_8250) && defined(CONFIG_SERIAL_TEXT_DEBUG)
 	ppc_md.progress = gen550_progress;
 #endif /* CONFIG_SERIAL_8250 && CONFIG_SERIAL_TEXT_DEBUG */
-#if defined(CONFIG_SERIAL_8250) && defined(CONFIG_KGDB)
-	ppc_md.early_serial_map = mpc85xx_early_serial_map;
-#endif	/* CONFIG_SERIAL_8250 && CONFIG_KGDB */
 
 	if (ppc_md.progress)
 		ppc_md.progress("mpc85xx_cds_init(): exit", 0);

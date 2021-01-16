@@ -224,6 +224,10 @@ static void __init pnx4008_init(void)
 	spi_register_board_info(spi_board_info, ARRAY_SIZE(spi_board_info));
 	/* Switch on the UART clocks */
 	pnx4008_uart_init();
+#ifdef CONFIG_KGDB_8250
+	kgdb8250_add_platform_port(0, &platform_serial_ports[0]);
+	kgdb8250_add_platform_port(1, &platform_serial_ports[1]);
+#endif
 }
 
 static struct map_desc pnx4008_io_desc[] __initdata = {

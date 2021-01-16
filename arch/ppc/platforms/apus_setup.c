@@ -598,12 +598,6 @@ int __debug_serinit( void )
 	ciab.ddra |= (SER_DTR | SER_RTS);   /* outputs */
 	ciab.ddra &= ~(SER_DCD | SER_CTS | SER_DSR);  /* inputs */
 
-#ifdef CONFIG_KGDB
-	/* turn Rx interrupts on for GDB */
-	amiga_custom.intena = IF_SETCLR | IF_RBF;
-	ser_RTSon();
-#endif
-
 	return 0;
 }
 

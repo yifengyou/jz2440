@@ -16,6 +16,8 @@
 #include <linux/serial_core.h>
 #include <linux/serial_8250.h>
 #include <linux/serialP.h>
+#include <linux/kgdb.h>
+
 #include <asm/io.h>
 #include <asm/machdep.h>
 
@@ -41,9 +43,6 @@
  *      ppc4xx_map_io				arch/ppc/syslib/ppc4xx_setup.c
  *  start_kernel				init/main.c
  *    setup_arch				arch/ppc/kernel/setup.c
- * #if defined(CONFIG_KGDB)
- *      *ppc_md.kgdb_map_scc() == gen550_kgdb_map_scc
- * #endif
  *      *ppc_md.setup_arch == ml300_setup_arch	this file
  *        ppc4xx_setup_arch			arch/ppc/syslib/ppc4xx_setup.c
  *          ppc4xx_find_bridges			arch/ppc/syslib/ppc405_pci.c

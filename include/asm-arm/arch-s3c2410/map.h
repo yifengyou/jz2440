@@ -106,6 +106,7 @@
 #define S3C24XX_SZ_IIC	   SZ_1M
 
 /* IIS controller */
+#define S3C24XX_VA_IIS      S3C2410_ADDR(0x00800000)
 #define S3C2400_PA_IIS	   (0x15508000)
 #define S3C2410_PA_IIS	   (0x55000000)
 #define S3C24XX_SZ_IIS	   SZ_1M

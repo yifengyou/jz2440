@@ -42,11 +42,11 @@
 #include <asm/pci-bridge.h>
 #include <asm/mpc83xx.h>
 #include <asm/irq.h>
-#include <asm/kgdb.h>
 #include <asm/ppc_sys.h>
 #include <mm/mmu_decl.h>
 
 #include <syslib/ppc83xx_setup.h>
+#include <syslib/gen550.h>
 
 #ifndef CONFIG_PCI
 unsigned long isa_io_base = 0;
@@ -114,7 +114,9 @@ mpc834x_sys_setup_arch(void)
 	/* setup PCI host bridges */
 	mpc83xx_setup_hose();
 #endif
+#if defined(CONFIG_SERIAL_8250) || defined(CONFIG_KGDB_8250)
 	mpc83xx_early_serial_map();
+#endif
 
 	/* setup the board related info for the MDIO bus */
 	mdata = (struct gianfar_mdio_data *) ppc_sys_get_pdata(MPC83xx_MDIO);
@@ -334,7 +336,6 @@ platform_init(unsigned long r3, unsigned long r4, unsigned long r5,
 	ppc_md.get_rtc_time = NULL;
 	ppc_md.calibrate_decr = mpc83xx_calibrate_decr;
 
-	ppc_md.early_serial_map = mpc83xx_early_serial_map;
 #if defined(CONFIG_SERIAL_8250) && defined(CONFIG_SERIAL_TEXT_DEBUG)
 	ppc_md.progress = gen550_progress;
 #endif	/* CONFIG_SERIAL_8250 && CONFIG_SERIAL_TEXT_DEBUG */
