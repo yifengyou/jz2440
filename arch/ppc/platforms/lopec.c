@@ -32,8 +32,7 @@
 #include <asm/mpc10x.h>
 #include <asm/hw_irq.h>
 #include <asm/prep_nvram.h>
-
-#include <syslib/gen550.h>
+#include <asm/kgdb.h>
 
 /*
  * Define all of the IRQ senses and polarities.  Taken from the

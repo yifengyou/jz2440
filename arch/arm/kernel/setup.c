@@ -832,11 +832,6 @@ void __init setup_arch(char **cmdline_p)
 	conswitchp = &dummy_con;
 #endif
 #endif
-
-#if	defined(CONFIG_KGDB)
-	extern void __init early_trap_init(void);
-	early_trap_init();
-#endif
 }
 
 

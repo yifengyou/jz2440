@@ -503,8 +503,7 @@ int __netpoll_rx(struct sk_buff *skb)
 
 	np->rx_hook(np, ntohs(uh->source),
 		    (char *)(uh+1),
-		    ulen - sizeof(struct udphdr),
-		    skb);
+		    ulen - sizeof(struct udphdr));
 
 	kfree_skb(skb);
 	return 1;

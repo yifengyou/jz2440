@@ -28,7 +28,7 @@
  * system call/exception. As usual the registers k0/k1 aren't being saved.
  */
 struct pt_regs {
-#if defined(CONFIG_32BIT) || defined(CONFIG_KGDB)
+#ifdef CONFIG_32BIT
 	/* Pad bytes for argument save space on the stack. */
 	unsigned long pad0[6];
 #endif

@@ -301,7 +301,6 @@ asmlinkage void __exception do_undefinstr(struct pt_regs *regs)
 	unsigned int instr;
 	struct undef_hook *hook;
 	siginfo_t info;
-	mm_segment_t fs;
 	void __user *pc;
 	unsigned long flags;
 
@@ -312,8 +311,6 @@ asmlinkage void __exception do_undefinstr(struct pt_regs *regs)
 	 */
 	regs->ARM_pc -= correction;
 
-	fs = get_fs();
-	set_fs(KERNEL_DS);
 	pc = (void __user *)instruction_pointer(regs);
 
 	if (processor_mode(regs) == SVC_MODE) {
@@ -323,7 +320,6 @@ asmlinkage void __exception do_undefinstr(struct pt_regs *regs)
 	} else {
 		get_user(instr, (u32 __user *)pc);
 	}
-	set_fs(fs);
 
 	spin_lock_irqsave(&undef_lock, flags);
 	list_for_each_entry(hook, &undef_hook, node) {
@@ -711,13 +707,6 @@ EXPORT_SYMBOL(abort);
 
 void __init trap_init(void)
 {
-#if   defined(CONFIG_KGDB)
-	return;
-}
-
-void __init early_trap_init(void)
-{
-#endif
 	unsigned long vectors = CONFIG_VECTORS_BASE;
 	extern char __stubs_start[], __stubs_end[];
 	extern char __vectors_start[], __vectors_end[];

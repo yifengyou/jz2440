@@ -17,3 +17,4 @@
 #
 
 obj-y			:= atlas_int.o atlas_setup.o
+obj-$(CONFIG_KGDB)	+= atlas_gdb.o

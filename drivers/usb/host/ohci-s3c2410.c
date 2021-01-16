@@ -24,7 +24,6 @@
 
 #include <asm/hardware.h>
 #include <asm/arch/usb-control.h>
-#include <asm/arch/regs-gpio.h>
 
 #define valid_port(idx) ((idx) == 1 || (idx) == 2)
 
@@ -348,11 +347,8 @@ static int usb_hcd_s3c2410_probe (const struct hc_driver *driver,
 	struct usb_hcd *hcd = NULL;
 	int retval;
 
-    /* 2 host port */
-    //writel(readl(S3C2410_MISCCR)|S3C2410_MISCCR_USBHOST, S3C2410_MISCCR);
-
 	s3c2410_usb_set_power(dev->dev.platform_data, 1, 1);
-   //	s3c2410_usb_set_power(dev->dev.platform_data, 2, 1);
+	s3c2410_usb_set_power(dev->dev.platform_data, 2, 1);
 
 	hcd = usb_create_hcd(driver, &dev->dev, "s3c24xx");
 	if (hcd == NULL)

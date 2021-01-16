@@ -3,3 +3,4 @@
 #
 
 obj-y	 			+= init.o irq.o setup.o
+obj-$(CONFIG_KGDB)		+= kgdb_io.o

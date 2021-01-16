@@ -162,8 +162,7 @@ static struct map_desc s3c_iodesc[] __initdata = {
 	IODESC_ENT(GPIO),
 	IODESC_ENT(IRQ),
 	IODESC_ENT(MEMCTRL),
-	IODESC_ENT(UART),
-	IODESC_ENT(IIS)    // for IIS, thiswa.diy@163.com, www.100ask.net
+	IODESC_ENT(UART)
 };
 
 

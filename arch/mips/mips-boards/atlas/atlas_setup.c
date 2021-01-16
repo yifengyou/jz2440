@@ -37,6 +37,10 @@ extern void mips_reboot_setup(void);
 extern void mips_time_init(void);
 extern unsigned long mips_rtc_get_time(void);
 
+#ifdef CONFIG_KGDB
+extern void kgdb_config(void);
+#endif
+
 static void __init serial_init(void);
 
 const char *get_system_type(void)
@@ -54,6 +58,9 @@ void __init plat_mem_setup(void)
 
 	serial_init ();
 
+#ifdef CONFIG_KGDB
+	kgdb_config();
+#endif
 	mips_reboot_setup();
 
 	board_time_init = mips_time_init;

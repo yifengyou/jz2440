@@ -25,10 +25,16 @@
 #include <linux/limits.h>
 #include <asm/system.h>
 #include <asm/uaccess.h>
-#include <linux/kgdb.h>
 
-#ifndef CONFIG_KGDB
-#define kgdb_handle_exception(t, s, e, r)
+#ifdef CONFIG_SH_KGDB
+#include <asm/kgdb.h>
+#define CHK_REMOTE_DEBUG(regs)			\
+{						\
+	if (kgdb_debug_hook && !user_mode(regs))\
+		(*kgdb_debug_hook)(regs);       \
+}
+#else
+#define CHK_REMOTE_DEBUG(regs)
 #endif
 
 #ifdef CONFIG_CPU_SH2
@@ -85,9 +91,7 @@ void die(const char * str, struct pt_regs * regs, long err)
 
 	printk("%s: %04lx [#%d]\n", str, err & 0xffff, ++die_counter);
 
-#ifdef CONFIG_KGDB
-	kgdb_handle_exception(1, SIGTRAP, err, regs);
-#endif
+	CHK_REMOTE_DEBUG(regs);
 	print_modules();
 	show_regs(regs);
 
@@ -696,9 +700,7 @@ asmlinkage void do_reserved_inst(unsigned long r4, unsigned long r5,
 	lookup_exception_vector(error_code);
 
 	local_irq_enable();
-#ifdef CONFIG_KGDB
-	kgdb_handle_exception(1, SIGILL, error_code, regs);
-#endif
+	CHK_REMOTE_DEBUG(regs);
 	force_sig(SIGILL, tsk);
 	die_if_no_fixup("reserved instruction", regs, error_code);
 }
@@ -769,9 +771,7 @@ asmlinkage void do_illegal_slot_inst(unsigned long r4, unsigned long r5,
 	lookup_exception_vector(error_code);
 
 	local_irq_enable();
-#ifdef CONFIG_KGDB
-	kgdb_handle_exception(1, SIGILL, error_code, regs);
-#endif
+	CHK_REMOTE_DEBUG(regs);
 	force_sig(SIGILL, tsk);
 	die_if_no_fixup("illegal slot instruction", regs, error_code);
 }

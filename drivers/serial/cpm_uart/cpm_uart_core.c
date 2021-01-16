@@ -1073,16 +1073,21 @@ int cpm_uart_drv_get_platform_data(struct platform_device *pdev, int is_con)
 	return 0;
 }
 
-void cpm_uart_early_write(int index, const char *s,
+#ifdef CONFIG_SERIAL_CPM_CONSOLE
+/*
+ *	Print a string to the serial port trying not to disturb
+ *	any possible real use of the port...
+ *
+ *	Note that this is called with interrupts already disabled
+ */
+static void cpm_uart_console_write(struct console *co, const char *s,
 				   u_int count)
 {
-	struct uart_cpm_port *pinfo;
+	struct uart_cpm_port *pinfo =
+	    &cpm_uart_ports[cpm_uart_port_map[co->index]];
 	unsigned int i;
 	volatile cbd_t *bdp, *bdbase;
 	volatile unsigned char *cp;
-
-	BUG_ON(index > UART_NR);
-	pinfo = &cpm_uart_ports[index];
 
 	/* Get the address of the host memory buffer.
 	 */
@@ -1147,14 +1152,19 @@ void cpm_uart_early_write(int index, const char *s,
 	pinfo->tx_cur = (volatile cbd_t *) bdp;
 }
 
-int cpm_uart_early_setup(int index, int early)
+
+static int __init cpm_uart_console_setup(struct console *co, char *options)
 {
-	int ret;
 	struct uart_port *port;
 	struct uart_cpm_port *pinfo;
+	int baud = 38400;
+	int bits = 8;
+	int parity = 'n';
+	int flow = 'n';
+	int ret;
 
 	struct fs_uart_platform_info *pdata;
-	struct platform_device *pdev = early_uart_get_pdev(index);
+	struct platform_device* pdev = early_uart_get_pdev(co->index);
 
 	if (!pdev) {
 		pr_info("cpm_uart: console: compat mode\n");
@@ -1162,9 +1172,8 @@ int cpm_uart_early_setup(int index, int early)
 		cpm_uart_init_portdesc();
 	}
 
-	BUG_ON(index > UART_NR);
 	port =
-		(struct uart_port *)&cpm_uart_ports[index];
+	    (struct uart_port *)&cpm_uart_ports[cpm_uart_port_map[co->index]];
 	pinfo = (struct uart_cpm_port *)port;
 	if (!pdev) {
 		if (pinfo->set_lineif)
@@ -1178,6 +1187,15 @@ int cpm_uart_early_setup(int index, int early)
 		cpm_uart_drv_get_platform_data(pdev, 1);
 	}
 
+	pinfo->flags |= FLAG_CONSOLE;
+
+	if (options) {
+		uart_parse_options(options, &baud, &parity, &bits, &flow);
+	} else {
+		if ((baud = uart_baudrate()) == -1)
+			baud = 9600;
+	}
+
 	if (IS_SMC(pinfo)) {
 		pinfo->smcp->smc_smcm &= ~(SMCM_RX | SMCM_TX);
 		pinfo->smcp->smc_smcmr &= ~(SMCMR_REN | SMCMR_TEN);
@@ -1185,7 +1203,8 @@ int cpm_uart_early_setup(int index, int early)
 		pinfo->sccp->scc_sccm &= ~(UART_SCCM_TX | UART_SCCM_RX);
 		pinfo->sccp->scc_gsmrl &= ~(SCC_GSMRL_ENR | SCC_GSMRL_ENT);
 	}
-	ret = cpm_uart_allocbuf(pinfo, early);
+
+	ret = cpm_uart_allocbuf(pinfo, 1);
 
 	if (ret)
 		return ret;
@@ -1197,62 +1216,6 @@ int cpm_uart_early_setup(int index, int early)
 	else
 		cpm_uart_init_scc(pinfo);
 
-	return 0;
-}
-
-#ifdef CONFIG_SERIAL_CPM_CONSOLE
-/*
- *	Print a string to the serial port trying not to disturb
- *	any possible real use of the port...
- *
- *	Note that this is called with interrupts already disabled
- */
-
-static void cpm_uart_console_write(struct console *co, const char *s,
-				   u_int count)
-{
-	cpm_uart_early_write(cpm_uart_port_map[co->index], s, count);
-}
-
-/*
- * Setup console. Be careful is called early !
- */
-static int __init cpm_uart_console_setup(struct console *co, char *options)
-{
-	struct uart_port *port;
-	struct uart_cpm_port *pinfo;
-	int baud = 115200;
-	int bits = 8;
-	int parity = 'n';
-	int flow = 'n';
-	int ret;
-
-#ifdef CONFIG_KGDB_CPM_UART
-	/* We are not interested in ports yet utilized by kgdb */
-	if (co->index == KGDB_PINFO_INDEX)
-		return 0;
-#endif
-
-	port =
-	    (struct uart_port *)&cpm_uart_ports[cpm_uart_port_map[co->index]];
-	pinfo = (struct uart_cpm_port *)port;
-
-	pinfo->flags |= FLAG_CONSOLE;
-
-	if (options) {
-		uart_parse_options(options, &baud, &parity, &bits, &flow);
-	} else {
-		bd_t *bd = (bd_t *) __res;
-
-		if (bd->bi_baudrate)
-			baud = bd->bi_baudrate;
-		else
-			baud = 9600;
-	}
-
-	ret = cpm_uart_early_setup(cpm_uart_port_map[co->index], 1);
-	if (ret)
-		return ret;
 	uart_set_options(port, co, baud, parity, bits, flow);
 
 	return 0;
@@ -1302,12 +1265,6 @@ static int cpm_uart_drv_probe(struct device *dev)
 	}
 
 	pdata = pdev->dev.platform_data;
-
-#ifdef CONFIG_KGDB_CPM_UART
-	/* We are not interested in ports yet utilized by kgdb */
-	if (cpm_uart_id2nr(fs_uart_get_id(pdata)) == KGDB_PINFO_INDEX)
-		return ret;
-#endif
 
 	if ((ret = cpm_uart_drv_get_platform_data(pdev, 0)))
 		return ret;
@@ -1406,12 +1363,6 @@ static int cpm_uart_init(void) {
 
 		for (i = 0; i < cpm_uart_nr; i++) {
 			int con = cpm_uart_port_map[i];
-
-#ifdef CONFIG_KGDB_CPM_UART
-		/* We are not interested in ports yet utilized by kgdb */
-			if (con == KGDB_PINFO_INDEX)
-				continue;
-#endif
 			cpm_uart_ports[con].port.line = i;
 			cpm_uart_ports[con].port.flags = UPF_BOOT_AUTOCONF;
 			if (cpm_uart_ports[con].set_lineif)

@@ -32,6 +32,7 @@
 #include <asm/processor.h>
 #include <asm/machdep.h>
 #include <asm/page.h>
+#include <asm/kgdb.h>
 #include <asm/ibm4xx.h>
 #include <asm/time.h>
 #include <asm/todc.h>
