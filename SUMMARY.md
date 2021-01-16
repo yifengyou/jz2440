@@ -1,6 +1,8 @@
 # Summary
 
 * [jz2440](README.md)
+* [开发环境](docs/开发环境/开发环境.md)
+    * [Ubuntu 18.04](docs/开发环境/Ubuntu-18.04.md)
 * [基础入门](docs/基础入门/基础入门.md)
     * [怎么看原理图之GPIO和门电路](docs/基础入门/怎么看原理图之GPIO和门电路.md)
     * [怎么看原理图之协议类接口之UART](docs/基础入门/怎么看原理图之协议类接口之UART.md)
@@ -48,6 +50,10 @@
     * [构建根文件系统之init进程分析](docs/u-boot及内核启动/构建根文件系统之init进程分析.md)
     * [构建根文件系统之busybox](docs/u-boot及内核启动/构建根文件系统之busybox.md)
     * [构建根文件系统之构建根文件系统](docs/u-boot及内核启动/构建根文件系统之构建根文件系统.md)
+* [内核源码](docs/内核源码/内核源码.md)
+    * [内核源码获取](docs/内核源码/内核源码获取.md)
+    * [内核编译](docs/内核源码/内核编译.md)
+    * [内核适配](docs/内核源码/内核适配.md)
 * [Linux驱动](docs/Linux驱动/Linux驱动.md)
     * [字符设备驱动程序之概念介绍](docs/Linux驱动/字符设备驱动程序之概念介绍.md)
     * [字符设备驱动程序之LED驱动程序编写编译](docs/Linux驱动/字符设备驱动程序之LED驱动程序_编写编译.md)
