@@ -15,3 +15,8 @@ if [ -f arch/arm/boot/uImage ];then
 else
 	echo "uImage not found!"
 fi
+
+
+[ -e /work/nfs_root/driver ] || mkdir -p /work/nfs_root/driver
+find ./ -name "*.ko" |xargs -i cp {} /work/nfs_root/driver
+ls -alh /work/nfs_root/driver

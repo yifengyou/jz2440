@@ -1,0 +1,13 @@
+diff -urN linux-2.6.22.6/Makefile linux-2.6.22.6-new/Makefile
+--- linux-2.6.22.6/Makefile	2021-01-17 05:06:05.934756372 -0500
++++ linux-2.6.22.6-new/Makefile	2021-01-17 05:08:18.126763241 -0500
+@@ -817,7 +817,8 @@
+ localver-full = $(localver)$(localver-auto)
+ 
+ # Store (new) KERNELRELASE string in include/config/kernel.release
+-kernelrelease = $(KERNELVERSION)$(localver-full)
++# kernelrelease = $(KERNELVERSION)$(localver-full)
++kernelrelease = $(KERNELVERSION)"-nicyou"
+ include/config/kernel.release: include/config/auto.conf FORCE
+ 	$(Q)rm -f $@
+ 	$(Q)echo $(kernelrelease) > $@

@@ -16,6 +16,8 @@ tar -xf linux-2.6.22.6.tar.bz2
 
 cd linux-2.6.22.6
 patch -p1 < ../linux-2.6.22.6_jz2440_v2v3.patch
+patch -p1 < ../nicyou_led_jz2440_v3.patch
+echo "patch done"
 
 cp config_ok .config
 echo "config done"
@@ -24,7 +26,7 @@ pngtopnm ../tencentos.png > tencentos.pnm
 pnmquant 224 tencentos.pnm > logo.pnm
 pnmtoplainpnm logo.pnm > logo_linux_clut224.ppm
 rm logo.pnm tencentos.pnm
-echo "done"
+echo "logo done"
 
 if [ -e drivers/video/logo/logo_linux_cult224.ppm ];then
 	cp drivers/video/logo/logo_linux_cult224.ppm drivers/video/logo/logo_linux_cult224.ppm.bak

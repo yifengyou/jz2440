@@ -1,0 +1,157 @@
+diff -urN linux-2.6.22.6/drivers/char/Makefile linux-2.6.22.6-new/drivers/char/Makefile
+--- linux-2.6.22.6/drivers/char/Makefile	2021-01-17 05:06:05.902756370 -0500
++++ linux-2.6.22.6-new/drivers/char/Makefile	2021-01-17 05:06:49.174758618 -0500
+@@ -11,6 +11,7 @@
+ 
+ obj-m    += s3c24xx_leds.o
+ obj-m    += s3c24xx_buttons.o
++obj-m    += s3c24xx_bnled.o
+ obj-m    += ker_rw.o
+ obj-$(CONFIG_LEGACY_PTYS)	+= pty.o
+ obj-$(CONFIG_UNIX98_PTYS)	+= pty.o
+diff -urN linux-2.6.22.6/drivers/char/s3c24xx_bnled.c linux-2.6.22.6-new/drivers/char/s3c24xx_bnled.c
+--- linux-2.6.22.6/drivers/char/s3c24xx_bnled.c	1969-12-31 19:00:00.000000000 -0500
++++ linux-2.6.22.6-new/drivers/char/s3c24xx_bnled.c	2021-01-17 05:07:21.738760311 -0500
+@@ -0,0 +1,142 @@
++#include <linux/module.h>
++#include <linux/kernel.h>
++#include <linux/fs.h>
++#include <linux/init.h>
++#include <linux/delay.h>
++#include <asm/irq.h>
++#include <linux/interrupt.h>
++#include <asm/uaccess.h>
++#include <asm/arch/regs-gpio.h>
++#include <asm/hardware.h>
++
++#define DEVICE_NAME     "bnled"   /* 加载模式后，执行”cat /proc/devices”命令看到的设备名称 */
++#define BUTTON_MAJOR    222         /* 主设备号 */
++
++struct button_irq_desc {
++	int irq;
++	unsigned long flags;
++	char *name;
++};
++
++/* 用来指定按键所用的外部中断引脚及中断触发方式, 名字 */
++static struct button_irq_desc button_irqs [] = {
++	{IRQ_EINT11, IRQF_TRIGGER_FALLING, "KEY2"}, /* K2 LED 3*/
++	{IRQ_EINT2,  IRQF_TRIGGER_FALLING, "KEY3"}, /* K3 LED 2*/
++	{IRQ_EINT0,  IRQF_TRIGGER_FALLING, "KEY4"}, /* K4 LED 1*/
++};
++
++/* 按键被按下的次数(准确地说，是发生中断的次数) */
++static volatile int press_cnt [] = {0, 1, 2};
++
++/* 等待队列: 
++ * 当没有按键被按下时，如果有进程调用s3c24xx_buttons_read函数，
++ * 它将休眠
++ */
++static DECLARE_WAIT_QUEUE_HEAD(button_waitq);
++
++/* 中断事件标志, 中断服务程序将它置1，s3c24xx_buttons_read将它清0 */
++static volatile int ev_press = 0;
++
++/* 应用程序执行ioctl(fd, cmd, arg)时的第2个参数 */
++#define IOCTL_LED_ON    0
++#define IOCTL_LED_OFF   1
++
++/* 用来指定LED所用的GPIO引脚 */
++static unsigned long led_table [] = {
++	S3C2410_GPF4,
++	S3C2410_GPF5,
++	S3C2410_GPF6,
++};
++
++/* 用来指定GPIO引脚的功能：输出 */
++static unsigned int led_cfg_table [] = {
++	S3C2410_GPF4_OUTP,
++	S3C2410_GPF5_OUTP,
++	S3C2410_GPF6_OUTP,
++};
++
++
++static irqreturn_t buttons_interrupt(int irq, void *dev_id)
++{
++	volatile int *press_cnt = (volatile int *)dev_id;
++
++	printk(DEVICE_NAME "trigger button interrupt![%d]\n", *press_cnt);
++	//*press_cnt = *press_cnt; /* 按键计数加1 */
++	int current_status = s3c2410_gpio_getpin(led_table[*press_cnt]);
++	printk(DEVICE_NAME " status ![%d]\n", current_status);
++	if (current_status != 0)
++	{
++		s3c2410_gpio_setpin(led_table[*press_cnt], 0);
++	} else {
++		s3c2410_gpio_setpin(led_table[*press_cnt], 1);
++	}
++	ev_press = 1;                /* 表示中断发生了 */
++	wake_up_interruptible(&button_waitq);   /* 唤醒休眠的进程 */
++
++	return IRQ_RETVAL(IRQ_HANDLED);
++}
++
++
++/*
++ * 执行“insmod s3c24xx_buttons.ko”命令时就会调用这个函数
++ */
++static int __init s3c24xx_bnled_init(void)
++{
++	int i;
++	int err;
++
++	/* 注册字符设备驱动程序
++	 * 参数为主设备号、设备名字、file_operations结构；
++	 * 这样，主设备号就和具体的file_operations结构联系起来了，
++	 * 操作主设备为BUTTON_MAJOR的设备文件时，就会调用s3c24xx_buttons_fops中的相关成员函数
++	 * BUTTON_MAJOR可以设为0，表示由内核自动分配主设备号
++	 */
++
++	for (i = 0; i < sizeof(button_irqs)/sizeof(button_irqs[0]); i++) {
++		// 注册中断处理函数
++		err = request_irq(button_irqs[i].irq, buttons_interrupt, button_irqs[i].flags, 
++				button_irqs[i].name, (void *)&press_cnt[i]);
++		if (err)
++			break;
++	}
++
++	if (err) {
++		// 释放已经注册的中断
++		i--;
++		for (; i >= 0; i--)
++			free_irq(button_irqs[i].irq, (void *)&press_cnt[i]);
++		return -EBUSY;
++	}
++
++
++	for (i = 0; i < 3; i++) {
++		// 设置GPIO引脚的功能：本驱动中LED所涉及的GPIO引脚设为输出功能
++		s3c2410_gpio_cfgpin(led_table[i], led_cfg_table[i]);
++	}
++
++	printk(DEVICE_NAME " register interrupts\n");
++	return 0;
++}
++
++/*
++ * 执行”rmmod s3c24xx_bnled.ko”命令时就会调用这个函数 
++ */
++static void __exit s3c24xx_bnled_exit(void)
++{
++	int i;
++
++	for (i = 0; i < sizeof(button_irqs)/sizeof(button_irqs[0]); i++) {
++		// 释放已经注册的中断
++		free_irq(button_irqs[i].irq, (void *)&press_cnt[i]);
++	}
++}
++
++/* 这两行指定驱动程序的初始化函数和卸载函数 */
++module_init(s3c24xx_bnled_init);
++module_exit(s3c24xx_bnled_exit);
++
++/* 描述驱动程序的一些信息，不是必须的 */
++MODULE_AUTHOR("nicyou");             // 驱动程序的作者
++MODULE_DESCRIPTION("S3C2410/S3C2440 bnled Driver");   // 一些描述信息
++MODULE_LICENSE("GPL");                              // 遵循的协议
++
