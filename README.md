@@ -98,11 +98,20 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
 
 
 
-## 思维导图
+## 资源图片
+
+![20210117_103146_44](image/20210117_103146_44.png)
+
+![20210117_103318_24](image/20210117_103318_24.png)
+
+## 资源站点
+
+* <https://github.com/Mculover666/uboot-jz2440>
+* <https://blog.csdn.net/tankai19880619/article/details/7839990>
+* <https://blog.csdn.net/Mculover666/article/details/104586654>
 
 
-
-## 参考教程
+## 课程及讲师简介
 
 ![1535206181049.png](image/1535206181049.png)
 
@@ -124,10 +133,6 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
 ```
 本仓库仅个人学习笔记，内容基本为视频教程所讲。经咨询客服可以截图做笔记网上发表，如有涉及侵权问题请早告知。
 ```
-
-## 大佬建议学习路线
-
-![1535615108609.png](image/1535615108609.png)
 
 
 ## 参考书籍
@@ -160,13 +165,16 @@ Bug report, questions and discussion are welcome, you can post an issue or pull 
 
 适合想从Linux内核启动开始透彻分析全部启动过程的读者，因Linux代码量庞大而束手无策的人、想要了解Linux实际运行过程的人、渴求OS实操理论的人，本书必将成为他们不可或缺的参考书。
 
+
+
+
 ## 随书光盘
 
 * <http://box.ptpress.com.cn/y/978-7-115-18262-3>
 
 ![20210116_151533_82](image/20210116_151533_82.png)
 
-![20210116_151613_67](image/20210116_151613_67.png) 
+![20210116_151613_67](image/20210116_151613_67.png)
 
 ## 总结
 
