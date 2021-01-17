@@ -26,4 +26,8 @@ find ./ -name "logo_linux_clut224.o" |xargs -i rm {} || true
 echo "clean logo_linux_clut224.o"
 
 make uImage -j$(cat /proc/cpuinfo|grep processor|wc -l)
+
+make modules
+
+find ./ -name "*.ko" |xargs -i cp {} /work/nfs_root/driver
 echo "All done!"

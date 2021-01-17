@@ -1,0 +1,28 @@
+diff -urN linux-2.6.22.6/drivers/char/s3c24xx_leds.c linux-2.6.22.6-new/drivers/char/s3c24xx_leds.c
+--- linux-2.6.22.6/drivers/char/s3c24xx_leds.c	2021-01-17 01:06:39.114009824 -0500
++++ linux-2.6.22.6-new/drivers/char/s3c24xx_leds.c	2021-01-17 01:13:54.074032426 -0500
+@@ -16,18 +16,16 @@
+ 
+ /* 用来指定LED所用的GPIO引脚 */
+ static unsigned long led_table [] = {
+-    S3C2410_GPB5,
+-    S3C2410_GPB6,
+-    S3C2410_GPB7,
+-    S3C2410_GPB8,
++    S3C2410_GPF4,
++    S3C2410_GPF5,
++    S3C2410_GPF6,
+ };
+ 
+ /* 用来指定GPIO引脚的功能：输出 */
+ static unsigned int led_cfg_table [] = {
+-    S3C2410_GPB5_OUTP,
+-    S3C2410_GPB6_OUTP,
+-    S3C2410_GPB7_OUTP,
+-    S3C2410_GPB8_OUTP,
++    S3C2410_GPF4_OUTP,
++    S3C2410_GPF5_OUTP,
++    S3C2410_GPF6_OUTP,
+ };
+ 
+ /* 应用程序对设备文件/dev/leds执行open(...)时，
